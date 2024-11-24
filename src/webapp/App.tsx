@@ -1,4 +1,5 @@
 import { CubeIcon } from '@heroicons/react/20/solid'
+import MemoryList from "./MemoryList";
 import './App.css'
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
           </div>
         </div>
       </div>
+      <MemoryList/>
     </div>
   )
 }
