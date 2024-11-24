@@ -98,12 +98,14 @@ const UpdateMemoryModal: React.FC<UpdateMemoryModalProps> = ({
           </div>
         </section>
         <footer className="modal-card-foot">
-          <button className="button is-success" onClick={handleConfirm}>
-            Confirm
-          </button>
-          <button className="button" onClick={onClose}>
-            Cancel
-          </button>
+          <div className="buttons">
+            <button className="button" onClick={handleConfirm}>
+              Confirm
+            </button>
+            <button className="button" onClick={onClose}>
+              Cancel
+            </button>
+          </div>
         </footer>
       </div>
     </div>
