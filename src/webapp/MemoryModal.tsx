@@ -1,17 +1,23 @@
 import React, { useEffect, useState } from "react";
 
-interface UpdateMemoryModalProps {
+interface MemoryModalProps {
   isOpen: boolean;
   memoryId: number | null;
   initialTitle: string;
   initialDescription: string;
   initialImageUrl: string;
-  initialTimestamp: number;
+  initialTimestamp: number; // Unix timestamp
   onClose: () => void;
-  onUpdate: (memoryId: number, updatedTitle: string, updatedDescription: string, updatedImageUrl: string, updatedTimestamp: number) => void;
+  onSubmit: (
+    memoryId: number | null,
+    title: string,
+    description: string,
+    imageUrl: string,
+    timestamp: number
+  ) => void;
 }
 
-const UpdateMemoryModal: React.FC<UpdateMemoryModalProps> = ({
+const MemoryModal: React.FC<MemoryModalProps> = ({
   isOpen,
   memoryId,
   initialTitle,
@@ -19,26 +25,30 @@ const UpdateMemoryModal: React.FC<UpdateMemoryModalProps> = ({
   initialImageUrl,
   initialTimestamp,
   onClose,
-  onUpdate,
+  onSubmit,
 }) => {
   const [title, setTitle] = useState<string>(initialTitle);
   const [description, setDescription] = useState<string>(initialDescription);
   const [imageUrl, setImageUrl] = useState<string>(initialImageUrl);
-  const [timestamp, setTimestamp] = useState<number>(initialTimestamp);
+  const [datetime, setDatetime] = useState<string>(""); // Local ISO string for datetime-local input
 
+  // Populate the modal with initial values
   useEffect(() => {
-      if (isOpen) {
-        setTitle(initialTitle);
-        setDescription(initialDescription);
-        setImageUrl(initialImageUrl);
-        setTimestamp(initialTimestamp);
-      }
-    }, [isOpen, initialTitle, initialDescription, initialImageUrl, initialTimestamp]);
-
-  const handleConfirm = () => {
-    if (memoryId) {
-      onUpdate(memoryId, title, description, imageUrl, timestamp);
+    if (isOpen) {
+      setTitle(initialTitle || "");
+      setDescription(initialDescription || "");
+      setImageUrl(initialImageUrl || "");
+      // Convert Unix timestamp to local ISO string for datetime-local input
+      const initialDatetime = new Date(initialTimestamp * 1000).toISOString().slice(0, 16);
+      setDatetime(initialDatetime || "");
     }
+  }, [isOpen, initialTitle, initialDescription, initialImageUrl, initialTimestamp]);
+
+  // Handle form submission
+  const handleConfirm = () => {
+    // Convert local ISO string back to Unix timestamp
+    const updatedTimestamp = new Date(datetime).getTime() / 1000;
+    onSubmit(memoryId, title, description, imageUrl, updatedTimestamp);
     onClose();
   };
 
@@ -49,7 +59,7 @@ const UpdateMemoryModal: React.FC<UpdateMemoryModalProps> = ({
       <div className="modal-background" onClick={onClose}></div>
       <div className="modal-card">
         <header className="modal-card-head">
-          <p className="modal-card-title">Update Memory</p>
+          <p className="modal-card-title">{memoryId ? "Update Memory" : "New Memory"}</p>
           <button className="delete" aria-label="close" onClick={onClose}></button>
         </header>
         <section className="modal-card-body">
@@ -59,7 +69,7 @@ const UpdateMemoryModal: React.FC<UpdateMemoryModalProps> = ({
               <input
                 className="input"
                 type="text"
-                value={title || ""}
+                value={title}
                 onChange={(e) => setTitle(e.target.value)}
               />
             </div>
@@ -69,7 +79,7 @@ const UpdateMemoryModal: React.FC<UpdateMemoryModalProps> = ({
             <div className="control">
               <textarea
                 className="textarea"
-                value={description || ""}
+                value={description}
                 onChange={(e) => setDescription(e.target.value)}
               ></textarea>
             </div>
@@ -80,7 +90,7 @@ const UpdateMemoryModal: React.FC<UpdateMemoryModalProps> = ({
               <input
                 className="input"
                 type="text"
-                value={imageUrl || ""}
+                value={imageUrl}
                 onChange={(e) => setImageUrl(e.target.value)}
               />
             </div>
@@ -90,16 +100,16 @@ const UpdateMemoryModal: React.FC<UpdateMemoryModalProps> = ({
             <div className="control">
               <input
                 className="input"
-                type="number"
-                value={timestamp || 0}
-                onChange={(e) => setTimestamp(Number(e.target.value))}
+                type="datetime-local"
+                value={datetime}
+                onChange={(e) => setDatetime(e.target.value)}
               />
             </div>
           </div>
         </section>
         <footer className="modal-card-foot">
           <div className="buttons">
-            <button className="button" onClick={handleConfirm}>
+            <button className="button is-success" onClick={handleConfirm}>
               Confirm
             </button>
             <button className="button" onClick={onClose}>
@@ -112,4 +122,4 @@ const UpdateMemoryModal: React.FC<UpdateMemoryModalProps> = ({
   );
 };
 
-export default UpdateMemoryModal;
+export default MemoryModal;
