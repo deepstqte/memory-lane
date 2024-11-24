@@ -1,11 +1,20 @@
 import React, { useEffect, useState } from "react";
 import MemoryCard from "./MemoryCard";
+import UpdateMemoryModal from "./UpdateMemoryModal";
 import { Memory } from "./types"
 
 const MemoryList: React.FC = () => {
   const [memories, setMemories] = useState<Memory[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [currentMemoryId, setCurrentMemoryId] = useState<number | null>(null);
+  const [currentTitle, setCurrentTitle] = useState<string>("");
+  const [currentDescription, setCurrentDescription] = useState<string>("");
+  const [currentImageUrl, setCurrentImageUrl] = useState<string>("");
+  const [currentTimestamp, setCurrentTimestamp] = useState<number>(0);
 
   const handleDelete = async (memoryId : number) => {
     try {
@@ -25,6 +34,61 @@ const MemoryList: React.FC = () => {
     }
   };
 
+  const handleUpdateClick = (
+    memoryId: number,
+    title: string,
+    description: string,
+    imageUrl: string,
+    timestamp: number,
+  ) => {
+    setCurrentMemoryId(memoryId);
+    setCurrentTitle(title);
+    setCurrentDescription(description);
+    setCurrentImageUrl(imageUrl);
+    setCurrentTimestamp(timestamp);
+    setIsModalOpen(true);
+  };
+
+  const handleUpdateSubmit = async (
+    memoryId: number,
+    updatedTitle: string,
+    updatedDescription: string,
+    updatedImageUrl: string,
+    updatedTimestamp: number,
+  ) => {
+    try {
+      const response = await fetch(
+        "https://hmz.ngrok.io/memories/" + memoryId,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: updatedTitle,
+            description: updatedDescription,
+            imageUrl: updatedImageUrl,
+            timestamp: updatedTimestamp,
+          }),
+        }
+      );
+      if (response.ok) {
+        console.log("Item updated successfully");
+
+        // Update memory in state
+        setMemories((prevMemories) =>
+          prevMemories.map((memory) =>
+            memory.id === memoryId
+              ? { ...memory, name: updatedTitle, description: updatedDescription, imageUrl: updatedImageUrl, timestamp: updatedTimestamp }
+              : memory
+          )
+        );
+      } else {
+        throw new Error(`Failed to update: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error("Error updating item:", error);
+    }
+  };
+
   useEffect(() => {
     // Replace with your API endpoint
     const fetchMemories = async () => {
@@ -38,7 +102,6 @@ const MemoryList: React.FC = () => {
           })
           .then((data) => {
             setMemories(data.memories);
-            console.log(data.memories); // Process the JSON data here
           })
           .catch((error) => console.error('Error fetching data:', error));
       } catch (err: unknown) {
@@ -73,12 +136,24 @@ const MemoryList: React.FC = () => {
                 timestamp={memory.timestamp}
                 onDelete={handleDelete}
                 memoryId={memory.id}
+                onUpdate={handleUpdateClick}
               />
             </div>
           )
         }
         )}
       </div>
+
+      <UpdateMemoryModal
+        isOpen={isModalOpen}
+        memoryId={currentMemoryId}
+        initialTitle={currentTitle}
+        initialDescription={currentDescription}
+        initialImageUrl={currentImageUrl}
+        initialTimestamp={currentTimestamp}
+        onClose={() => setIsModalOpen(false)}
+        onUpdate={handleUpdateSubmit} // Handle the update logic
+      />
     </div>
   );
 };

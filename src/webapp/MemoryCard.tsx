@@ -13,13 +13,13 @@ interface MemoryCardProps {
   timestamp: number;
   onDelete: (memoryId: number) => void;
   memoryId: number;
+  onUpdate: (memoryId: number, title: string, description: string, imageUrl: string, timestamp: number) => void;
 }
 
-const MemoryCard: React.FC<MemoryCardProps> = ({ title, description, image, timestamp, onDelete, memoryId }) => {
+const MemoryCard: React.FC<MemoryCardProps> = ({ title, description, image, timestamp, onDelete, memoryId, onUpdate }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
-    console.log("Menu state:", !isMenuOpen);
   };
 
   const dateTime: Date = new Date(timestamp * 1000);
@@ -78,7 +78,7 @@ const MemoryCard: React.FC<MemoryCardProps> = ({ title, description, image, time
               <ul className="dropdown-content" style={{ padding: 0, margin: 0 }}>
                 <li
                   className="dropdown-item"
-                  onClick={() => alert("Update action")}
+                  onClick={() => onUpdate(memoryId, title, description, image, timestamp)}
                   style={{
                     padding: "0.5rem 1rem",
                     cursor: "pointer",
