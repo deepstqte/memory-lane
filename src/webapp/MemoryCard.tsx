@@ -1,13 +1,22 @@
 import React from "react";
+import TimeAgo from 'javascript-time-ago';
+import en from 'javascript-time-ago/locale/en';
+
+TimeAgo.addDefaultLocale(en);
+
+const timeAgo = new TimeAgo('en-US');
 
 interface MemoryCardProps {
   title: string;
   description: string;
-  image: string; // URL for the image
-  timestamp: string; // ISO string or formatted date
+  image: string;
+  timestamp: number;
 }
 
 const MemoryCard: React.FC<MemoryCardProps> = ({ title, description, image, timestamp }) => {
+  const dateTime: Date = new Date(timestamp * 1000);
+  const timeAgoString: string = timeAgo.format(dateTime);
+  const timeString: string = dateTime.toDateString() + " - " + dateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   return (
     <div className="card" style={{ maxWidth: "30%", margin: "0 auto", marginTop: "2rem" }}>
       <div className="card-content is-flex is-align-items-center">
@@ -20,7 +29,7 @@ const MemoryCard: React.FC<MemoryCardProps> = ({ title, description, image, time
         {/* Content Section */}
         <div className="content">
           <p className="title is-4">{title}</p>
-          <p className="subtitle is-6 has-text-grey">{timestamp}</p>
+          <p className="subtitle is-6 has-text-grey" title={timeString}>{timeAgoString}</p>
           <p>{description}</p>
         </div>
       </div>

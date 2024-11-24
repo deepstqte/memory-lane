@@ -3,5 +3,5 @@ export interface Memory {
   name: string;
   description: string;
   imageUrl: string;
-  timestamp: string;
+  timestamp: number;
 }
