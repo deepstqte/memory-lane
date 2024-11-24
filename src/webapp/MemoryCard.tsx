@@ -35,8 +35,16 @@ const MemoryCard: React.FC<MemoryCardProps> = ({ title, description, image, time
         position: "relative",
       }}
     >
+      <div className="card-image">
+        <figure className="image is-1by1">
+          <img
+              src={image}
+              alt={title}
+          />
+        </figure>
+      </div>
       {/* Contextual Menu */}
-      <div style={{ position: "absolute", top: "1rem", right: "1rem" }}>
+      <div style={{ position: "absolute", bottom: "1rem", right: "1rem" }}>
         <div
           className="dropdown is-right"
           style={{ position: "relative" }}
@@ -96,15 +104,6 @@ const MemoryCard: React.FC<MemoryCardProps> = ({ title, description, image, time
       </div>
 
       <div className="card-content is-flex is-align-items-center">
-        {/* Image Section */}
-        <div className="media">
-          <figure
-            className="image is-64x64"
-            style={{ marginRight: "1rem" }}
-          >
-            <img className="is-rounded" src={image} alt={title} />
-          </figure>
-        </div>
         {/* Content Section */}
         <div className="content">
           <p className="title is-4">{title}</p>
