@@ -32,6 +32,7 @@ const MemoryCard: React.FC<MemoryCardProps> = ({ title, description, image, time
         maxWidth: "30%",
         margin: "0 auto",
         marginTop: "2rem",
+        marginBottom: "2rem",
         position: "relative",
       }}
     >

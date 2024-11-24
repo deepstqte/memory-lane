@@ -123,7 +123,11 @@ const MemoryList: React.FC = () => {
   }
 
   return (
-    <div className="container">
+    <div className="container" style={{
+      marginTop: "2rem",
+      marginBottom: "2rem",
+    }}>
+      <button className="button is-normal">New Memory</button>
       <div className="columns is-multiline is-centered">
         {memories.map((memory) => {
           if (!memory.id) return null;

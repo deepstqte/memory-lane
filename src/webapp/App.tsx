@@ -1,4 +1,4 @@
-import { CubeIcon } from '@heroicons/react/20/solid'
+// import { CubeIcon } from '@heroicons/react/20/solid'
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import MemoryList from "./MemoryList";
 import './App.css'
@@ -10,15 +10,17 @@ function App() {
         <div className='overflow-hidden rounded-lg bg-white shadow h-96'>
           <div className='px-4 py-5 sm:p-6'>
             <div className='flex items-center'>
-              <CubeIcon className='h-16 w-16 inline-block' />
+              {/* <CubeIcon className='h-16 w-16 inline-block' /> */}
               <h1 className='text-4xl font-semibold text-gray-900 mb-4 ml-4 mt-4'>
                 Memory lane
               </h1>
             </div>
           </div>
         </div>
+        <MemoryList/>
       </div>
-      <MemoryList/>
+      <footer className="footer">
+      </footer>
     </div>
   )
 }
