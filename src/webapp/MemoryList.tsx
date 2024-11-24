@@ -20,7 +20,7 @@ const MemoryList: React.FC = () => {
           })
           .then((data) => {
             setMemories(data.memories);
-            console.log(data); // Process the JSON data here
+            console.log(data.memories); // Process the JSON data here
           })
           .catch((error) => console.error('Error fetching data:', error));
       } catch (err: unknown) {
@@ -49,7 +49,7 @@ const MemoryList: React.FC = () => {
             <MemoryCard
               title={memory.name}
               description={memory.description}
-              image={memory.image}
+              image={memory.imageUrl}
               timestamp={memory.timestamp}
             />
           </div>

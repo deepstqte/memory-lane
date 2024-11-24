@@ -16,6 +16,7 @@ db.serialize(() => {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT,
       description TEXT,
+      imageUrl TEXT,
       timestamp DATE
     )
   `);
@@ -34,19 +35,19 @@ app.get('/memories', (req: Request, res: Response) => {
 
 // Create a new memory
 app.post('/memories', (req: Request, res: Response) => {
-  const { name, description, timestamp } = req.body as Memory;
+  const { name, description, imageUrl, timestamp } = req.body as Memory;
 
-  if (!name || !description || !timestamp) {
+  if (!name || !description || !imageUrl || !timestamp) {
     res.status(400).json({
-      error: 'Please provide all fields: name, description, timestamp',
+      error: 'Please provide all fields: name, description, imageUrl, timestamp',
     });
     return;
   }
 
   const stmt = db.prepare(
-    'INSERT INTO memories (name, description, timestamp) VALUES (?, ?, ?)'
+    'INSERT INTO memories (name, description, imageUrl, timestamp) VALUES (?, ?, ?, ?)'
   );
-  stmt.run(name, description, timestamp, (err: Error | null) => {
+  stmt.run(name, description, imageUrl, timestamp, (err: Error | null) => {
     if (err) {
       res.status(500).json({ error: err.message });
       return;
@@ -74,19 +75,19 @@ app.get('/memories/:id', (req: Request, res: Response) => {
 // Update a memory by ID
 app.put('/memories/:id', (req: Request, res: Response) => {
   const { id } = req.params;
-  const { name, description, timestamp } = req.body as Memory;
+  const { name, description, imageUrl, timestamp } = req.body as Memory;
 
-  if (!name || !description || !timestamp) {
+  if (!name || !description || !imageUrl || !timestamp) {
     res.status(400).json({
-      error: 'Please provide all fields: name, description, timestamp',
+      error: 'Please provide all fields: name, description, imageUrl, timestamp',
     });
     return;
   }
 
   const stmt = db.prepare(
-    'UPDATE memories SET name = ?, description = ?, timestamp = ? WHERE id = ?'
+    'UPDATE memories SET name = ?, description = ?, imageUrl = ?, timestamp = ? WHERE id = ?'
   );
-  stmt.run(name, description, timestamp, id, (err: Error | null) => {
+  stmt.run(name, description, imageUrl, timestamp, id, (err: Error | null) => {
     if (err) {
       res.status(500).json({ error: err.message });
       return;
