@@ -1,6 +1,7 @@
 import express, { Express, Request, Response } from 'express';
 import sqlite3 from 'sqlite3';
 import cors from 'cors';
+import { Memory } from "./types";
 
 const app: Express = express();
 const port = 4001;
@@ -19,13 +20,6 @@ db.serialize(() => {
     )
   `);
 });
-
-interface Memory {
-  id?: number;
-  name: string;
-  description: string;
-  timestamp: string;
-}
 
 // Get all memories
 app.get('/memories', (req: Request, res: Response) => {

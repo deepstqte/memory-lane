@@ -1,13 +1,6 @@
 import React, { useEffect, useState } from "react";
 import MemoryCard from "./MemoryCard";
-
-interface Memory {
-  id: number;
-  name: string;
-  description: string;
-  image: string;
-  timestamp: string;
-}
+import { Memory } from "./types"
 
 const MemoryList: React.FC = () => {
   const [memories, setMemories] = useState<Memory[]>([]);
