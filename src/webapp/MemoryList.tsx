@@ -7,6 +7,24 @@ const MemoryList: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  const handleDelete = async (memoryId : number) => {
+    try {
+      const response = await fetch("https://hmz.ngrok.io/memories/" + memoryId, {
+        method: "DELETE",
+      });
+      if (response.ok) {
+        console.log("Item deleted successfully");
+        setMemories((prevMemories) =>
+          prevMemories.filter((memory) => memory.id !== memoryId)
+        );
+      } else {
+        throw new Error(`Failed to delete: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error("Error deleting item:", error);
+    }
+  };
+
   useEffect(() => {
     // Replace with your API endpoint
     const fetchMemories = async () => {
@@ -44,16 +62,22 @@ const MemoryList: React.FC = () => {
   return (
     <div className="container">
       <div className="columns is-multiline is-centered">
-        {memories.map((memory) => (
-          <div className="column" key={memory.id}>
-            <MemoryCard
-              title={memory.name}
-              description={memory.description}
-              image={memory.imageUrl}
-              timestamp={memory.timestamp}
-            />
-          </div>
-        ))}
+        {memories.map((memory) => {
+          if (!memory.id) return null;
+          return (
+            <div className="column" key={memory.id}>
+              <MemoryCard
+                title={memory.name}
+                description={memory.description}
+                image={memory.imageUrl}
+                timestamp={memory.timestamp}
+                onDelete={handleDelete}
+                memoryId={memory.id}
+              />
+            </div>
+          )
+        }
+        )}
       </div>
     </div>
   );

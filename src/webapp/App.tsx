@@ -1,4 +1,5 @@
 import { CubeIcon } from '@heroicons/react/20/solid'
+import "@fortawesome/fontawesome-free/css/all.min.css";
 import MemoryList from "./MemoryList";
 import './App.css'
 
