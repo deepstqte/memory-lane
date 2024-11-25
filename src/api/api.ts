@@ -2,6 +2,7 @@ import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
+import csrf from "csurf";
 import { Memory } from "./types";
 
 import { WorkOS, AuthenticateWithSessionCookieSuccessResponse, AuthenticateWithSessionCookieFailedResponse } from "@workos-inc/node";
@@ -27,12 +28,21 @@ const db = drizzle("postgresql://memory-lane_owner:" + process.env.NEON_SECRET +
 const app: Express = express();
 const port = 4001;
 
+const csrfProtection = csrf({
+  cookie: {
+    httpOnly: true,
+    secure: true,
+    sameSite: "strict",
+  },
+});
+
 app.use(cors({
   origin: "https://memorylane.hmz.ngrok.io",
   credentials: true,
 }));
 app.use(express.json());
 app.use(cookieParser());
+app.use(csrfProtection);
 
 const WORKOS_API_KEY = process.env.WORKOS_API_KEY;
 const WORKOS_CLIENT_ID = process.env.WORKOS_CLIENT_ID;
@@ -98,7 +108,7 @@ app.get("/auth/callback", async (req: Request, res: Response): Promise<void> => 
     });
 
     // Use the information in `user` for further business logic.
-    console.log(user);
+    // console.log(user);
 
     // Redirect the user to the homepage
     return res.redirect('/');
@@ -160,8 +170,6 @@ async function withAuth(req: Request, res: Response, next: NextFunction): Promis
   } catch (error) {
     console.error("Authentication middleware error:", error);
     res.redirect("/login");
-    // res.status(500).send("Internal Server Error");
-
   }
 }
 
@@ -186,6 +194,10 @@ app.get("/logout", async (req: Request, res: Response): Promise<void> => {
     console.error("Error during logout:", error);
     res.status(500).send("Internal Server Error");
   }
+});
+
+app.get("/csrf-token", (req: Request, res: Response) => {
+  res.json({ csrfToken: req.csrfToken() });
 });
 
 async function getUserFromSession(req: Request) {
@@ -226,7 +238,7 @@ app.get('/memories', withAuth, async (req: Request, res: Response) => {
 });
 
 // Create a new memory
-app.post('/memories', async (req: Request, res: Response) => {
+app.post('/memories', withAuth, async (req: Request, res: Response) => {
   const { name, description, imageUrl, timestamp } = req.body as Memory;
 
   if (!name || !description || !imageUrl || !timestamp) {
@@ -250,7 +262,7 @@ app.post('/memories', async (req: Request, res: Response) => {
 });
 
 // Get a memory by ID
-app.get('/memories/:id', async (req: Request, res: Response) => {
+app.get('/memories/:id', withAuth, async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
     const memory = await db.select().from(memories).where(eq(memories.id, Number(id)));
@@ -293,7 +305,7 @@ app.put('/memories/:id', async (req: Request, res: Response) => {
 });
 
 // Delete a memory by ID
-app.delete('/memories/:id', async (req: Request, res: Response) => {
+app.delete('/memories/:id', withAuth, async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
     await db.delete(memories).where(eq(memories.id, Number(id)));

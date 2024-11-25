@@ -15,11 +15,35 @@ const MemoryList: React.FC = () => {
   const [currentDescription, setCurrentDescription] = useState<string>("");
   const [currentImageUrl, setCurrentImageUrl] = useState<string>("");
   const [currentTimestamp, setCurrentTimestamp] = useState<number>(0);
+  const [csrfToken, setCsrfToken] = useState<string>("");
+
+    useEffect(() => {
+      const fetchCsrfToken = async () => {
+        try {
+          const response = await fetch("https://hmz.ngrok.io/csrf-token", {
+            method: "GET",
+            credentials: "include",
+          });
+          if (!response.ok) throw new Error("Failed to fetch CSRF token");
+          const data = await response.json();
+          setCsrfToken(data.csrfToken);
+        } catch (error) {
+          console.error("Error fetching CSRF token:", error);
+        }
+      };
+
+      fetchCsrfToken();
+    }, []);
 
   const handleDelete = async (memoryId: number) => {
     try {
       const response = await fetch("https://hmz.ngrok.io/memories/" + memoryId, {
         method: "DELETE",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrfToken,
+        },
       });
       if (response.ok) {
         setMemories((prevMemories) =>
@@ -71,7 +95,11 @@ const MemoryList: React.FC = () => {
           "https://hmz.ngrok.io/memories/" + memoryId,
           {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRF-Token": csrfToken,
+            },
             body: JSON.stringify({
               name: title,
               description,
@@ -99,7 +127,11 @@ const MemoryList: React.FC = () => {
       try {
         const response = await fetch("https://hmz.ngrok.io/memories", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-Token": csrfToken,
+          },
           body: JSON.stringify({
             name: title,
             description,
