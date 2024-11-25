@@ -6,4 +6,13 @@ export const memories = pgTable("memories", {
   description: text("description").notNull(),
   imageUrl: text("imageUrl").notNull(),
   timestamp: timestamp("timestamp").notNull(),
+  author: text('author').references(() => users.id, {onDelete: 'cascade'}).notNull(),
+});
+
+export const users = pgTable("users", {
+  id: text("id").primaryKey(),
+  email: text("email").notNull(),
+  firstNname: text("firstNname"),
+  lastName: text("lastName"),
+  profilePictureUrl: text("profilePictureUrl"),
 });
