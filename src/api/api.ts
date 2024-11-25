@@ -1,40 +1,45 @@
 import express, { Express, Request, Response } from 'express';
-import sqlite3 from 'sqlite3';
 import cors from 'cors';
 import { Memory } from "./types";
 
+// TODO: Organize DB and Drizzle code in a separate db file
+import { drizzle } from "drizzle-orm/node-postgres";
+import { pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { eq } from 'drizzle-orm';
+
+const memories = pgTable("memories", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  imageUrl: text("imageUrl").notNull(),
+  timestamp: timestamp("timestamp").notNull(),
+});
+
+// Initialize Drizzle with PostgreSQL adapter
+const db = drizzle("postgresql://memory-lane_owner:" + process.env.NEON_SECRET + "@ep-dry-thunder-a5c84sxk.us-east-2.aws.neon.tech/memory-lane?sslmode=require");
+
 const app: Express = express();
 const port = 4001;
-const db = new sqlite3.Database('memories.db');
 
 app.use(cors());
 app.use(express.json());
 
-db.serialize(() => {
-  db.run(`
-    CREATE TABLE IF NOT EXISTS memories (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT,
-      description TEXT,
-      imageUrl TEXT,
-      timestamp DATE
-    )
-  `);
-});
-
 // Get all memories
-app.get('/memories', (req: Request, res: Response) => {
-  db.all('SELECT * FROM memories', (err, rows: Memory[]) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
-    }
-    res.json({ memories: rows });
-  });
+app.get('/memories', async (req: Request, res: Response) => {
+  try {
+    const rawMemories = await db.select().from(memories);
+    const allMemories = rawMemories.map((memory) => ({
+      ...memory,
+      timestamp: Math.floor(new Date(memory.timestamp).getTime() / 1000),
+    }));
+    res.json({ memories: allMemories });
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
 });
 
 // Create a new memory
-app.post('/memories', (req: Request, res: Response) => {
+app.post('/memories', async (req: Request, res: Response) => {
   const { name, description, imageUrl, timestamp } = req.body as Memory;
 
   if (!name || !description || !imageUrl || !timestamp) {
@@ -44,36 +49,36 @@ app.post('/memories', (req: Request, res: Response) => {
     return;
   }
 
-  const stmt = db.prepare(
-    'INSERT INTO memories (name, description, imageUrl, timestamp) VALUES (?, ?, ?, ?)'
-  );
-  stmt.run(name, description, imageUrl, timestamp, (err: Error | null) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
-    }
-    res.status(201).json({ message: 'Memory created successfully' });
-  });
+  try {
+    await db.insert(memories).values({
+      name,
+      description,
+      imageUrl,
+      timestamp: new Date(timestamp * 1000), // Convert to JS Date
+    });
+    res.status(201).json({ message: "Memory created successfully" });
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
 });
 
 // Get a memory by ID
-app.get('/memories/:id', (req: Request, res: Response) => {
+app.get('/memories/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
-  db.get('SELECT * FROM memories WHERE id = ?', [id], (err, row: Memory | undefined) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
+  try {
+    const memory = await db.select().from(memories).where(eq(memories.id, Number(id)));
+    if (!memory) {
+      res.status(404).json({ error: "Memory not found" });
       return;
     }
-    if (!row) {
-      res.status(404).json({ error: 'Memory not found' });
-      return;
-    }
-    res.json({ memory: row });
-  });
+    res.json({ memory });
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
 });
 
 // Update a memory by ID
-app.put('/memories/:id', (req: Request, res: Response) => {
+app.put('/memories/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
   const { name, description, imageUrl, timestamp } = req.body as Memory;
 
@@ -84,28 +89,31 @@ app.put('/memories/:id', (req: Request, res: Response) => {
     return;
   }
 
-  const stmt = db.prepare(
-    'UPDATE memories SET name = ?, description = ?, imageUrl = ?, timestamp = ? WHERE id = ?'
-  );
-  stmt.run(name, description, imageUrl, timestamp, id, (err: Error | null) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
-    }
-    res.json({ message: 'Memory updated successfully' });
-  });
+  try {
+    await db
+      .update(memories)
+      .set({
+        name,
+        description,
+        imageUrl,
+        timestamp: new Date(timestamp * 1000),
+      })
+      .where(eq(memories.id, Number(id)));
+    res.json({ message: "Memory updated successfully" });
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
 });
 
 // Delete a memory by ID
-app.delete('/memories/:id', (req: Request, res: Response) => {
+app.delete('/memories/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
-  db.run('DELETE FROM memories WHERE id = ?', [id], (err: Error | null) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
-    }
-    res.json({ message: 'Memory deleted successfully' });
-  });
+  try {
+    await db.delete(memories).where(eq(memories.id, Number(id)));
+    res.json({ message: "Memory deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
 });
 
 app.listen(port, () => {
