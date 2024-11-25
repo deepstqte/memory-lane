@@ -122,7 +122,10 @@ const MemoryList: React.FC = () => {
   useEffect(() => {
     const fetchMemories = async () => {
       try {
-        const response = await fetch("https://hmz.ngrok.io/memories");
+        const response = await fetch("https://hmz.ngrok.io/memories", {
+          method: "GET",
+          credentials: "include",
+        });
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
         setMemories(data.memories);
