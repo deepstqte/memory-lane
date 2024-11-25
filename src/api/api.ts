@@ -41,6 +41,7 @@ const users = pgTable("users", {
   firstName: text("firstName"),
   lastName: text("lastName"),
   profilePictureUrl: text("profilePictureUrl"),
+  bio: text("bio"),
 });
 
 // Initialize Drizzle with PostgreSQL adapter
@@ -217,9 +218,9 @@ app.get("/logout", async (req: Request, res: Response): Promise<void> => {
   }
 });
 
-// app.get("/csrf-token", (req: Request, res: Response) => {
-//   res.json({ csrfToken: req.csrfToken() });
-// });
+app.get("/csrf-token", (req: Request, res: Response) => {
+  res.json({ csrfToken: req.csrfToken() });
+});
 
 async function getUserFromSession(req: Request) {
   try {
@@ -400,6 +401,36 @@ app.delete('/memories/:id', withAuth, async (req: Request, res: Response) => {
       } else {
         res.status(401).json({ error: "Unauthorized!" });
       }
+    }
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+// Update a user's bio
+app.put('/users', withAuth, async (req: Request, res: Response) => {
+  try {
+    console.log(req.body);
+    const { bio } = req.body;
+    console.log(bio);
+
+    if (!bio) {
+      res.status(400).json({
+        error: 'Please provide the bio',
+      });
+      return;
+    }
+
+    const user = await getUserFromSession(req);
+
+    if (user) {
+      await db
+        .update(users)
+        .set({
+          bio: bio,
+        })
+        .where(eq(users.id, user.id));
+      res.json({ message: "Bio updated successfully" });
     }
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });

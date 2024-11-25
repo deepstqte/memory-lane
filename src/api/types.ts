@@ -16,4 +16,5 @@ export interface User {
   updatedAt?: string | null;
   emailVerified?: boolean | null;
   object?: string | null;
+  bio?: string;
 }
