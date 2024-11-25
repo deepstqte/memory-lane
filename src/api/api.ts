@@ -3,18 +3,30 @@ import cors from 'cors';
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import csrf from "csurf";
-import { Memory } from "./types";
+import { Memory, User } from "./types";
 
 import { WorkOS, AuthenticateWithSessionCookieSuccessResponse, AuthenticateWithSessionCookieFailedResponse } from "@workos-inc/node";
+
+// {
+//   object: 'user',
+//   id: 'user_01JDJ3YV4Z2QJ3W2TX764E52EJ',
+//   email: 'benhmani.hamza@gmail.com',
+//   emailVerified: true,
+//   firstName: 'Hamza',
+//   profilePictureUrl: 'https://workoscdn.com/images/v1/Ai5kJlQayzq39vCuNWvCQNt8qtbXJsAOUMw1CvB7zDY',
+//   lastName: 'Benhmani',
+//   createdAt: '2024-11-25T16:54:58.440Z',
+//   updatedAt: '2024-11-25T16:54:58.440Z'
+// }
 
 // TODO: Organize DB and Drizzle code in a separate db file
 import { drizzle } from "drizzle-orm/node-postgres";
 import { pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 dotenv.config();
 
-export const memories = pgTable("memories", {
+const memories = pgTable("memories", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description").notNull(),
@@ -23,10 +35,10 @@ export const memories = pgTable("memories", {
   author: text('author').references(() => users.id, {onDelete: 'cascade'}).notNull(),
 });
 
-export const users = pgTable("users", {
+const users = pgTable("users", {
   id: text("id").primaryKey(),
   email: text("email").notNull(),
-  firstNname: text("firstNname"),
+  firstName: text("firstName"),
   lastName: text("lastName"),
   profilePictureUrl: text("profilePictureUrl"),
 });
@@ -205,9 +217,9 @@ app.get("/logout", async (req: Request, res: Response): Promise<void> => {
   }
 });
 
-app.get("/csrf-token", (req: Request, res: Response) => {
-  res.json({ csrfToken: req.csrfToken() });
-});
+// app.get("/csrf-token", (req: Request, res: Response) => {
+//   res.json({ csrfToken: req.csrfToken() });
+// });
 
 async function getUserFromSession(req: Request) {
   try {
@@ -229,6 +241,36 @@ async function getUserFromSession(req: Request) {
   }
 }
 
+async function addUser(user: User) {
+  try {
+    if (user) {
+      await db.insert(users).values({
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        profilePictureUrl: user.profilePictureUrl,
+      });
+    }
+  } catch (err) {
+    console.error("Error: ", (err as Error).message);
+  }
+}
+
+async function userIsMemoryCreator(userId: string, memoryId: number): Promise<boolean> {
+  try {
+    const userMemory = await db.select().from(memories).where(and(eq(memories.author, userId), eq(memories.id, memoryId))).limit(1);
+    if (userMemory.length == 0) {
+      return false;
+    } else {
+      return true;
+    }
+  } catch (err) {
+    console.error("Error: ", (err as Error).message);
+    return false;
+  }
+}
+
 // API Endpoints
 
 // Get all memories
@@ -239,7 +281,6 @@ app.get('/memories', withAuth, async (req: Request, res: Response) => {
       ...memory,
       timestamp: Math.floor(new Date(memory.timestamp).getTime() / 1000),
     }));
-
     res.json({ memories: allMemories });
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
@@ -258,13 +299,38 @@ app.post('/memories', withAuth, async (req: Request, res: Response) => {
   }
 
   try {
-    await db.insert(memories).values({
-      name,
-      description,
-      imageUrl,
-      timestamp: new Date(timestamp * 1000), // Convert to JS Date
-    });
-    res.status(201).json({ message: "Memory created successfully" });
+    const user = await getUserFromSession(req);
+
+    if (!user) {
+      res.status(403).json({ error: "User is not authenticated!" });
+    } else {
+      const existingUsers = await db.select().from(users).where(eq(users.id, user.id));
+      if (existingUsers.length == 0) {
+        await addUser(user);
+      }
+      await db.insert(memories).values({
+        name,
+        description,
+        imageUrl,
+        timestamp: new Date(timestamp * 1000),
+        author: user.id,
+      });
+      res.status(201).json({ message: "Memory created successfully" });
+    }
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+// Get a user's memories by User ID
+app.get('/users/:uid/memories', async (req: Request, res: Response) => {
+  const { uid } = req.params;
+  try {
+    const userMemories = await db.select().from(memories).where(eq(memories.author, uid));
+    if (userMemories.length == 0) {
+      res.status(404).json({ error: "Memories not found" });
+    }
+    res.json(userMemories);
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
   }
@@ -277,7 +343,6 @@ app.get('/memories/:id', withAuth, async (req: Request, res: Response) => {
     const memory = await db.select().from(memories).where(eq(memories.id, Number(id)));
     if (!memory) {
       res.status(404).json({ error: "Memory not found" });
-      return;
     }
     res.json({ memory });
   } catch (err) {
@@ -286,28 +351,37 @@ app.get('/memories/:id', withAuth, async (req: Request, res: Response) => {
 });
 
 // Update a memory by ID
-app.put('/memories/:id', async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const { name, description, imageUrl, timestamp } = req.body as Memory;
-
-  if (!name || !description || !imageUrl || !timestamp) {
-    res.status(400).json({
-      error: 'Please provide all fields: name, description, imageUrl, timestamp',
-    });
-    return;
-  }
-
+app.put('/memories/:id', withAuth, async (req: Request, res: Response) => {
   try {
-    await db
-      .update(memories)
-      .set({
-        name,
-        description,
-        imageUrl,
-        timestamp: new Date(timestamp * 1000),
-      })
-      .where(eq(memories.id, Number(id)));
-    res.json({ message: "Memory updated successfully" });
+    const { id } = req.params;
+    const { name, description, imageUrl, timestamp } = req.body as Memory;
+
+    if (!name || !description || !imageUrl || !timestamp) {
+      res.status(400).json({
+        error: 'Please provide all fields: name, description, imageUrl, timestamp',
+      });
+      return;
+    }
+
+    const user = await getUserFromSession(req);
+
+    if (user) {
+      if (await userIsMemoryCreator(user.id, Number(id))) {
+        await db
+          .update(memories)
+          .set({
+            name,
+            description,
+            imageUrl,
+            timestamp: new Date(timestamp * 1000),
+          })
+          .where(eq(memories.id, Number(id)));
+        res.json({ message: "Memory updated successfully" });
+      } else {
+        res.status(401).json({ error: "Unauthorized!" });
+      }
+    }
+
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
   }
@@ -317,8 +391,16 @@ app.put('/memories/:id', async (req: Request, res: Response) => {
 app.delete('/memories/:id', withAuth, async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
-    await db.delete(memories).where(eq(memories.id, Number(id)));
-    res.json({ message: "Memory deleted successfully" });
+    const user = await getUserFromSession(req);
+
+    if (user) {
+      if (await userIsMemoryCreator(user.id, Number(id))) {
+        await db.delete(memories).where(eq(memories.id, Number(id)));
+        res.json({ message: "Memory deleted successfully" });
+      } else {
+        res.status(401).json({ error: "Unauthorized!" });
+      }
+    }
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
   }

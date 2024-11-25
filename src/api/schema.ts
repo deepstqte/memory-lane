@@ -12,7 +12,7 @@ export const memories = pgTable("memories", {
 export const users = pgTable("users", {
   id: text("id").primaryKey(),
   email: text("email").notNull(),
-  firstNname: text("firstNname"),
+  firstName: text("firstName"),
   lastName: text("lastName"),
   profilePictureUrl: text("profilePictureUrl"),
 });
