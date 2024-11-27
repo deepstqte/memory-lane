@@ -36,6 +36,12 @@ const MemoryCard: React.FC<MemoryCardProps> = ({ title, description, image, time
         position: "relative",
       }}
     >
+      {/* <header className="card-header">
+        <figure className="image is-48x48" style={{ margin: "1rem" }}>
+        <img className="is-rounded" src="https://bulma.io/assets/images/placeholders/128x128.png" />
+        </figure>
+        <p className="card-header-title">Component</p>
+      </header> */}
       <div className="card-image">
         <figure className="image is-1by1">
           <img

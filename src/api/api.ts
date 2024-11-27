@@ -22,7 +22,7 @@ import { WorkOS, AuthenticateWithSessionCookieSuccessResponse, AuthenticateWithS
 // TODO: Organize DB and Drizzle code in a separate db file
 import { drizzle } from "drizzle-orm/node-postgres";
 import { pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
-import { eq, and } from 'drizzle-orm';
+import { eq, and, desc } from 'drizzle-orm';
 
 dotenv.config();
 
@@ -277,7 +277,7 @@ async function userIsMemoryCreator(userId: string, memoryId: number): Promise<bo
 // Get all memories
 app.get('/memories', withAuth, async (req: Request, res: Response) => {
   try {
-    const rawMemories = await db.select().from(memories);
+    const rawMemories = await db.select().from(memories).orderBy(desc(memories.timestamp));
     const allMemories = rawMemories.map((memory) => ({
       ...memory,
       timestamp: Math.floor(new Date(memory.timestamp).getTime() / 1000),
@@ -327,11 +327,29 @@ app.post('/memories', withAuth, async (req: Request, res: Response) => {
 app.get('/users/:uid/memories', async (req: Request, res: Response) => {
   const { uid } = req.params;
   try {
-    const userMemories = await db.select().from(memories).where(eq(memories.author, uid));
-    if (userMemories.length == 0) {
+    const userRawMemories = await db.select().from(memories).where(eq(memories.author, uid)).orderBy(desc(memories.timestamp));
+    if (userRawMemories.length == 0) {
       res.status(404).json({ error: "Memories not found" });
     }
-    res.json(userMemories);
+    const userMemories = userRawMemories.map((memory) => ({
+      ...memory,
+      timestamp: Math.floor(new Date(memory.timestamp).getTime() / 1000),
+    }));
+    res.json({ memories: userMemories });
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+// Get a user's info
+app.get('/users/:uid', async (req: Request, res: Response) => {
+  const { uid } = req.params;
+  try {
+    const user = await db.select().from(users).where(eq(users.id, uid));
+    if (user.length == 0) {
+      res.status(404).json({ error: "User not found" });
+    }
+    res.json({ user: user[0] });
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
   }
@@ -410,9 +428,7 @@ app.delete('/memories/:id', withAuth, async (req: Request, res: Response) => {
 // Update a user's bio
 app.put('/users', withAuth, async (req: Request, res: Response) => {
   try {
-    console.log(req.body);
     const { bio } = req.body;
-    console.log(bio);
 
     if (!bio) {
       res.status(400).json({
@@ -435,6 +451,20 @@ app.put('/users', withAuth, async (req: Request, res: Response) => {
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
   }
+});
+
+// Check if the user is authenticated
+app.get('/whoami', withAuth, async (req: Request, res: Response) => {
+  try {
+    const user = await getUserFromSession(req);
+    res.json({ userId: user?.id });
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+app. get('/', function (req, res) {
+	res.redirect('https://memorylane.hmz.ngrok.io/');
 });
 
 app.listen(port, () => {
