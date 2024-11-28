@@ -3,7 +3,7 @@ import { useEffect } from "react";
 function LogoutRedirect() {
   useEffect(() => {
     // Redirect to external URL
-    window.location.href = "https://hmz.ngrok.io/logout";
+    window.location.href = `${import.meta.env.VITE_API_BASE_URL}/logout`;
   }, []);
 
   return null; // Render nothing as the user is being redirected

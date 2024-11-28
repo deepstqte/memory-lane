@@ -20,7 +20,7 @@ const ImageUpload: React.FC = () => {
     formData.append('memoryId', "888");
 
     try {
-      const response = await fetch('https://hmz.ngrok.io/upload', {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/upload`, {
         method: 'POST',
         body: formData,
       });
@@ -28,8 +28,7 @@ const ImageUpload: React.FC = () => {
       const data = await response.json();
 
       if (response.ok && data.url) {
-        console.log(data.url);
-        // onUpload(data.url); // Pass the URL to the parent component or API
+        console.log("Image uploaded successfully");
       } else {
         console.error('Error uploading image:', data.error || 'Unknown error');
       }

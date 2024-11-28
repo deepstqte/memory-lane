@@ -25,7 +25,7 @@ const Profile: React.FC = () => {
   useEffect(() => {
     const fetchMemories = async () => {
       try {
-        const response = await fetch("https://hmz.ngrok.io/users/" + userId, {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/users/${userId}`, {
           method: "GET",
           credentials: "include",
         });
@@ -45,7 +45,7 @@ const Profile: React.FC = () => {
   useEffect(() => {
     const fetchLoggedInUserId = async () => {
       try {
-        const response = await fetch("https://hmz.ngrok.io/whoami", {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/whoami`, {
           method: "GET",
           credentials: "include",
           headers: {
@@ -64,7 +64,7 @@ const Profile: React.FC = () => {
     };
 
     fetchLoggedInUserId();
-  }, [userId]);
+  }, [csrfToken, userId]);
 
   const handleSubmit = async (
     bio: string | undefined
@@ -72,7 +72,7 @@ const Profile: React.FC = () => {
     // Update existing user
     try {
       const response = await fetch(
-        "https://hmz.ngrok.io/users/",
+        `${import.meta.env.VITE_API_BASE_URL}/users/`,
         {
           method: "PUT",
           credentials: "include",

@@ -2,9 +2,10 @@ import React, { useEffect, useState } from "react";
 import MemoryCard from "./MemoryCard";
 import MemoryModal from "./MemoryModal";
 import { Memory } from "./types";
+import useCsrfToken from "./hooks/useCsrfToken";
 
 interface MemoryListProps {
-  userId?: string; // Optional userId prop
+  userId?: string;
 }
 
 const MemoryList: React.FC<MemoryListProps> = ({ userId }) => {
@@ -19,29 +20,12 @@ const MemoryList: React.FC<MemoryListProps> = ({ userId }) => {
   const [currentDescription, setCurrentDescription] = useState<string>("");
   const [currentImageUrl, setCurrentImageUrl] = useState<string>("");
   const [currentTimestamp, setCurrentTimestamp] = useState<number>(0);
-  const [csrfToken, setCsrfToken] = useState<string>("");
 
-  useEffect(() => {
-    const fetchCsrfToken = async () => {
-      try {
-        const response = await fetch("https://hmz.ngrok.io/csrf-token", {
-          method: "GET",
-          credentials: "include",
-        });
-        if (!response.ok) throw new Error("Failed to fetch CSRF token");
-        const data = await response.json();
-        setCsrfToken(data.csrfToken);
-      } catch (error) {
-        console.error("Error fetching CSRF token:", error);
-      }
-    };
-
-    fetchCsrfToken();
-  }, []);
+  const csrfToken = useCsrfToken();
 
   const handleDelete = async (memoryId: number) => {
     try {
-      const response = await fetch("https://hmz.ngrok.io/memories/" + memoryId, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/memories/` + memoryId, {
         method: "DELETE",
         credentials: "include",
         headers: {
@@ -91,12 +75,12 @@ const MemoryList: React.FC<MemoryListProps> = ({ userId }) => {
     description: string,
     imageUrl: string,
     timestamp: number
-  ): Promise<number | void> => {
+  ): Promise<number | null> => {
     if (memoryId) {
       // Update existing memory
       try {
         const response = await fetch(
-          "https://hmz.ngrok.io/memories/" + memoryId,
+          `${import.meta.env.VITE_API_BASE_URL}/memories/` + memoryId,
           {
             method: "PUT",
             credentials: "include",
@@ -127,10 +111,11 @@ const MemoryList: React.FC<MemoryListProps> = ({ userId }) => {
       } catch (error) {
         console.error("Error updating item:", error);
       }
+      return null;
     } else {
       // Create new memory
       try {
-        const response = await fetch("https://hmz.ngrok.io/memories", {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/memories`, {
           method: "POST",
           credentials: "include",
           headers: {
@@ -146,14 +131,16 @@ const MemoryList: React.FC<MemoryListProps> = ({ userId }) => {
         });
         if (response.ok) {
           const newMemory = await response.json();
+          console.log(newMemory);
+          setMemories((prevMemories) => [...prevMemories, newMemory]);
           return(newMemory.id);
-          // setMemories((prevMemories) => [...prevMemories, newMemory]);
         } else {
           throw new Error(`Failed to create: ${response.statusText}`);
         }
       } catch (error) {
         console.error("Error creating item:", error);
       }
+      return null;
     }
   };
 
@@ -161,8 +148,8 @@ const MemoryList: React.FC<MemoryListProps> = ({ userId }) => {
     const fetchMemories = async () => {
       try {
         const url = userId
-          ? `https://hmz.ngrok.io/users/${userId}/memories`
-          : "https://hmz.ngrok.io/memories";
+          ? `${import.meta.env.VITE_API_BASE_URL}/users/${userId}/memories`
+          : `${import.meta.env.VITE_API_BASE_URL}/memories`;
         const response = await fetch(url, {
           method: "GET",
           credentials: "include",
@@ -180,14 +167,15 @@ const MemoryList: React.FC<MemoryListProps> = ({ userId }) => {
     fetchMemories();
   }, [userId]);
 
-  if (isLoading) return <p className="has-text-centered">Loading memories...</p>;
+  if (isLoading) return <p className="has-text-centered">Loading memory...</p>;
   if (error) return <p className="has-text-centered has-text-danger">Error: {error}</p>;
-
   return (
     <div className="container" style={{ marginTop: "2rem", marginBottom: "2rem" }}>
-      <button className="button is-normal" onClick={handleNewMemoryClick}>
-        New Memory
-      </button>
+      <div className="is-flex is-justify-content-flex-end">
+        <button className="button is-normal" onClick={handleNewMemoryClick}>
+          New Memory
+        </button>
+      </div>
       <div className="columns is-multiline is-centered">
         {memories.map((memory) => (
           <div className="column is-full" key={memory.id}>
@@ -200,6 +188,10 @@ const MemoryList: React.FC<MemoryListProps> = ({ userId }) => {
                 timestamp={memory.timestamp}
                 onDelete={handleDelete}
                 onUpdate={handleUpdateClick}
+                userId={memory.author}
+                firstName={memory.user.firstName || ""}
+                lastName={memory.user.lastName || ""}
+                profilePictureUrl={memory.user.profilePictureUrl || ""}
               />)
             }
           </div>

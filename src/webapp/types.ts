@@ -4,6 +4,8 @@ export interface Memory {
   description: string;
   imageUrl: string;
   timestamp: number;
+  author: string;
+  user: User;
 }
 
 export interface User {

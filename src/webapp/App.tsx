@@ -14,12 +14,7 @@ function App() {
         <div className='mx-auto max-w-7xl sm:px-6 lg:px-8 mt-32'>
           <AuthButton />
           <Routes>
-            <Route
-              path="/"
-              element={
-                <MemoryList/>
-              }
-            />
+            <Route path="/" element={<MemoryList />} />
             <Route path="/:userId" element={<Profile />} />
             <Route path="/login" element={<LoginRedirect />} />
             <Route path="/logout" element={<LogoutRedirect />} />

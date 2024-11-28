@@ -62,13 +62,12 @@ const MemoryModal: React.FC<MemoryModalProps> = ({
       const updatedTimestamp = new Date(datetime).getTime() / 1000;
       const newMemoryId = await onSubmit(memoryId, title, description, initialImageUrl, updatedTimestamp);
 
-      console.log(newMemoryId);
       const formData = new FormData();
       formData.append('file', selectedFile);
       formData.append('memoryId', newMemoryId);
 
       try {
-        const response = await fetch('https://hmz.ngrok.io/upload', {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/upload`, {
           method: 'POST',
           body: formData,
           credentials: "include",
@@ -79,9 +78,11 @@ const MemoryModal: React.FC<MemoryModalProps> = ({
 
         const data = await response.json();
 
-        if (response.ok && data.url) {
-          const updatedTimestamp = new Date(datetime).getTime() / 1000;
-          onSubmit(newMemoryId, title, description, data.url, updatedTimestamp);
+        // if (response.ok && data.url) {
+        if (response.ok) {
+          // const updatedTimestamp = new Date(datetime).getTime() / 1000;
+          // onSubmit(newMemoryId, title, description, data.url, updatedTimestamp);
+          console.log("Image uploaded successfully")
         } else {
           console.error('Error uploading image:', data.error || 'Unknown error');
         }
@@ -130,7 +131,26 @@ const MemoryModal: React.FC<MemoryModalProps> = ({
               ></textarea>
             </div>
           </div>
-          <input type="file" onChange={handleFileChange} />
+
+          <div className="file has-name is-fullwidth">
+            <label className="file-label">
+              <input
+                className="file-input"
+                type="file"
+                name="file"
+                onChange={handleFileChange}
+              />
+              <span className="file-cta">
+                <span className="file-icon">
+                  <i className="fas fa-upload"></i>
+                </span>
+                <span className="file-label">Choose a file…</span>
+              </span>
+              <span className="file-name">
+                {selectedFile ? selectedFile.name : "No file selected"}
+              </span>
+            </label>
+          </div>
           <div className="field">
             <label className="label">Timestamp</label>
             <div className="control">

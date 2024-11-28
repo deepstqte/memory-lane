@@ -1,17 +1,25 @@
 import React, { useEffect, useState } from "react";
+import useCsrfToken from "./hooks/useCsrfToken";
 
 const AuthButton: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const csrfToken = useCsrfToken();
 
   useEffect(() => {
     const checkAuthentication = async () => {
       try {
-        const response = await fetch("https://hmz.ngrok.io/whoami", {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/whoami`, {
           method: "GET",
-          credentials: "include", // Include cookies in the request
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-Token": csrfToken,
+          },
         });
 
-        if (response.ok) {
+        const data = await response.json();
+
+        if ("userId" in data) {
           setIsAuthenticated(true);
         } else {
           setIsAuthenticated(false);
@@ -23,15 +31,15 @@ const AuthButton: React.FC = () => {
     };
 
     checkAuthentication();
-  }, []);
+  }, [csrfToken]);
 
   const handleLogin = () => {
-    window.location.href = "https://hmz.ngrok.io/login";
+    window.location.href = `${import.meta.env.VITE_API_BASE_URL}/login`;
   };
 
   const handleLogout = async () => {
     try {
-      const response = await fetch("https://hmz.ngrok.io/logout", {
+    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/logout`, {
         method: "GET",
         credentials: "include",
       });
