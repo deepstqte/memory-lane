@@ -91,7 +91,7 @@ const MemoryList: React.FC<MemoryListProps> = ({ userId }) => {
     description: string,
     imageUrl: string,
     timestamp: number
-  ) => {
+  ): Promise<number | void> => {
     if (memoryId) {
       // Update existing memory
       try {
@@ -123,6 +123,7 @@ const MemoryList: React.FC<MemoryListProps> = ({ userId }) => {
         } else {
           throw new Error(`Failed to update: ${response.statusText}`);
         }
+        return memoryId;
       } catch (error) {
         console.error("Error updating item:", error);
       }
@@ -145,7 +146,8 @@ const MemoryList: React.FC<MemoryListProps> = ({ userId }) => {
         });
         if (response.ok) {
           const newMemory = await response.json();
-          setMemories((prevMemories) => [...prevMemories, newMemory]);
+          return(newMemory.id);
+          // setMemories((prevMemories) => [...prevMemories, newMemory]);
         } else {
           throw new Error(`Failed to create: ${response.statusText}`);
         }

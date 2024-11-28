@@ -3,15 +3,17 @@ import React, { useEffect, useState } from "react";
 import MemoryList from "./MemoryList";
 import ProfileModal from "./ProfileModal";
 import { User } from "./types";
+import useCsrfToken from "./hooks/useCsrfToken";
 
 const Profile: React.FC = () => {
+  const csrfToken = useCsrfToken();
   const { userId } = useParams<{ userId: string }>();
   const [user, setUser] = useState<User>();
+  const [showUpdatButton, setShowUpdatButton] = useState<boolean>();
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [csrfToken, setCsrfToken] = useState<string>("");
 
   const handleProfileUpdateClick = (
     // bio: string
@@ -19,24 +21,6 @@ const Profile: React.FC = () => {
     // setCurrentBio(bio);
     setIsModalOpen(true);
   };
-
-  useEffect(() => {
-    const fetchCsrfToken = async () => {
-      try {
-        const response = await fetch("https://hmz.ngrok.io/csrf-token", {
-          method: "GET",
-          credentials: "include",
-        });
-        if (!response.ok) throw new Error("Failed to fetch CSRF token");
-        const data = await response.json();
-        setCsrfToken(data.csrfToken);
-      } catch (error) {
-        console.error("Error fetching CSRF token:", error);
-      }
-    };
-
-    fetchCsrfToken();
-  }, []);
 
   useEffect(() => {
     const fetchMemories = async () => {
@@ -56,6 +40,30 @@ const Profile: React.FC = () => {
     };
 
     fetchMemories();
+  }, [userId]);
+
+  useEffect(() => {
+    const fetchLoggedInUserId = async () => {
+      try {
+        const response = await fetch("https://hmz.ngrok.io/whoami", {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-Token": csrfToken,
+          },
+        });
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.json();
+        setShowUpdatButton(data.userId == userId);
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "An unknown error occurred");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchLoggedInUserId();
   }, [userId]);
 
   const handleSubmit = async (
@@ -101,7 +109,7 @@ const Profile: React.FC = () => {
         <div className='px-4 py-5 sm:p-6'>
           <div className='flex items-center'>
             <figure className="image is-48x48">
-              <img className="is-rounded" src={user?.profilePictureUrl} />
+              <img className="is-rounded" src={user?.profilePictureUrl || "https://st3.depositphotos.com/6672868/13701/v/450/depositphotos_137014128-stock-illustration-user-profile-icon.jpg"} />
             </figure>
             <h1 className='text-4xl font-semibold text-gray-900 mb-4 ml-4 mt-4'>
               {user?.firstName} {user?.lastName}
@@ -110,11 +118,13 @@ const Profile: React.FC = () => {
           <p>
             {user?.bio}
           </p>
-          <div className='is-flex is-justify-content-flex-end'>
-            <button className="button is-normal" onClick={handleProfileUpdateClick}>
-              Update Bio
-            </button>
-          </div>
+          {showUpdatButton && (
+            <div className='is-flex is-justify-content-flex-end'>
+              <button className="button is-normal" onClick={handleProfileUpdateClick}>
+                Update Bio
+              </button>
+            </div>
+          )}
         </div>
       </div>
       <MemoryList userId={userId} />

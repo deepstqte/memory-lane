@@ -24,13 +24,24 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
 import { eq, and, desc } from 'drizzle-orm';
 
+import { v2 as cloudinary } from 'cloudinary';
+import multer from 'multer';
+
+const upload = multer({ storage: multer.memoryStorage() });
+
 dotenv.config();
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 const memories = pgTable("memories", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description").notNull(),
-  imageUrl: text("imageUrl").notNull(),
+  imageUrl: text("imageUrl"),
   timestamp: timestamp("timestamp").notNull(),
   author: text('author').references(() => users.id, {onDelete: 'cascade'}).notNull(),
 });
@@ -120,6 +131,7 @@ app.get("/auth/callback", async (req: Request, res: Response): Promise<void> => 
       });
 
     const { user, sealedSession } = authenticateResponse;
+    console.log(user);
 
     // Store the session in a cookie
     res.cookie('wos-session', sealedSession, {
@@ -292,9 +304,9 @@ app.get('/memories', withAuth, async (req: Request, res: Response) => {
 app.post('/memories', withAuth, async (req: Request, res: Response) => {
   const { name, description, imageUrl, timestamp } = req.body as Memory;
 
-  if (!name || !description || !imageUrl || !timestamp) {
+  if (!name || !description || !timestamp) {
     res.status(400).json({
-      error: 'Please provide all fields: name, description, imageUrl, timestamp',
+      error: 'Please provide all fields: name, description, timestamp',
     });
     return;
   }
@@ -309,14 +321,14 @@ app.post('/memories', withAuth, async (req: Request, res: Response) => {
       if (existingUsers.length == 0) {
         await addUser(user);
       }
-      await db.insert(memories).values({
+      const newMemory = await db.insert(memories).values({
         name,
         description,
         imageUrl,
         timestamp: new Date(timestamp * 1000),
         author: user.id,
-      });
-      res.status(201).json({ message: "Memory created successfully" });
+      }).returning({ insertedId: memories.id });
+      res.status(201).json({ message: "Memory created successfully", id: newMemory[0].insertedId });
     }
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
@@ -338,6 +350,34 @@ app.get('/users/:uid/memories', async (req: Request, res: Response) => {
     res.json({ memories: userMemories });
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+app.post('/upload', withAuth, upload.single('file'), async (req: Request, res: Response) => {
+  try {
+    const file = req.file;
+    const name = req.body.memoryId;
+    // console.log(file);
+    if (!file || !name) {
+      res.status(400).json({ error: 'No file uploaded or no memoryId provided' });
+      return;
+    }
+
+    const user = await getUserFromSession(req);
+
+    // Upload to Cloudinary
+    cloudinary.uploader.upload_stream(
+      {
+        folder: user?.id || "default",
+        public_id: name,
+      },
+      (error, result) => {
+        if (error) return res.status(500).json({ error: error.message });
+        res.json({ url: "https://res.cloudinary.com/memory-lane/image/upload/" + result?.public_id });
+      }
+    ).end(file.buffer);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to upload image' });
   }
 });
 

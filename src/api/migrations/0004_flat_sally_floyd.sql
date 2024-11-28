@@ -1,0 +1,1 @@
+ALTER TABLE "memories" ALTER COLUMN "imageUrl" DROP NOT NULL;

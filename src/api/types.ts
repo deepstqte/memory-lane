@@ -2,7 +2,7 @@ export interface Memory {
   id?: number;
   name: string;
   description: string;
-  imageUrl: string;
+  imageUrl?: string;
   timestamp: number;
 }
 

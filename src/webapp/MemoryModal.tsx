@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import useCsrfToken from "./hooks/useCsrfToken";
 
 interface MemoryModalProps {
   isOpen: boolean;
@@ -27,17 +28,17 @@ const MemoryModal: React.FC<MemoryModalProps> = ({
   onClose,
   onSubmit,
 }) => {
+  const csrfToken = useCsrfToken();
   const [title, setTitle] = useState<string>(initialTitle);
   const [description, setDescription] = useState<string>(initialDescription);
-  const [imageUrl, setImageUrl] = useState<string>(initialImageUrl);
-  const [datetime, setDatetime] = useState<string>(""); // Local ISO string for datetime-local input
+  const [datetime, setDatetime] = useState<string>("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   // Populate the modal with initial values
   useEffect(() => {
     if (isOpen) {
       setTitle(initialTitle || "");
       setDescription(initialDescription || "");
-      setImageUrl(initialImageUrl || "");
       // Convert Unix timestamp to local ISO string for datetime-local input
       const initialDatetime = new Date(initialTimestamp * 1000).toISOString().slice(0, 16);
       setDatetime(initialDatetime || "");
@@ -46,10 +47,55 @@ const MemoryModal: React.FC<MemoryModalProps> = ({
 
   // Handle form submission
   const handleConfirm = () => {
-    // Convert local ISO string back to Unix timestamp
-    const updatedTimestamp = new Date(datetime).getTime() / 1000;
-    onSubmit(memoryId, title, description, imageUrl, updatedTimestamp);
+    uploadAndSubmit();
     onClose();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      setSelectedFile(event.target.files[0]);
+    }
+  };
+
+  const uploadAndSubmit = async () => {
+    if (selectedFile) {
+      const updatedTimestamp = new Date(datetime).getTime() / 1000;
+      const newMemoryId = await onSubmit(memoryId, title, description, initialImageUrl, updatedTimestamp);
+
+      console.log(newMemoryId);
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      formData.append('memoryId', newMemoryId);
+
+      try {
+        const response = await fetch('https://hmz.ngrok.io/upload', {
+          method: 'POST',
+          body: formData,
+          credentials: "include",
+          headers: {
+            "X-CSRF-Token": csrfToken,
+          },
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.url) {
+          const updatedTimestamp = new Date(datetime).getTime() / 1000;
+          onSubmit(newMemoryId, title, description, data.url, updatedTimestamp);
+        } else {
+          console.error('Error uploading image:', data.error || 'Unknown error');
+        }
+      } catch (error) {
+        console.error('Error uploading image and creating memory:', error);
+      }
+    } else {
+      try {
+        const updatedTimestamp = new Date(datetime).getTime() / 1000;
+        onSubmit(memoryId, title, description, initialImageUrl, updatedTimestamp);
+      } catch (error) {
+        console.error('Error updating memory:', error);
+      }
+    }
   };
 
   if (!isOpen) return null;
@@ -84,17 +130,7 @@ const MemoryModal: React.FC<MemoryModalProps> = ({
               ></textarea>
             </div>
           </div>
-          <div className="field">
-            <label className="label">Image URL</label>
-            <div className="control">
-              <input
-                className="input"
-                type="text"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-              />
-            </div>
-          </div>
+          <input type="file" onChange={handleFileChange} />
           <div className="field">
             <label className="label">Timestamp</label>
             <div className="control">
