@@ -2,8 +2,9 @@ export interface Memory {
   id?: number;
   name: string;
   description: string;
-  imageUrl?: string;
   timestamp: number;
+  author: string;
+  user: User;
 }
 
 export interface User {

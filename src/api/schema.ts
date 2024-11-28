@@ -4,7 +4,6 @@ export const memories = pgTable("memories", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description").notNull(),
-  imageUrl: text("imageUrl"),
   timestamp: timestamp("timestamp").notNull(),
   author: text('author').references(() => users.id, {onDelete: 'cascade'}).notNull(),
 });
