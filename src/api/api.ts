@@ -7,18 +7,6 @@ import { Memory, User } from "./types";
 
 import { WorkOS, AuthenticateWithSessionCookieSuccessResponse, AuthenticateWithSessionCookieFailedResponse } from "@workos-inc/node";
 
-// {
-//   object: 'user',
-//   id: 'user_01JDJ3YV4Z2QJ3W2TX764E52EJ',
-//   email: 'benhmani.hamza@gmail.com',
-//   emailVerified: true,
-//   firstName: 'Hamza',
-//   profilePictureUrl: 'https://workoscdn.com/images/v1/Ai5kJlQayzq39vCuNWvCQNt8qtbXJsAOUMw1CvB7zDY',
-//   lastName: 'Benhmani',
-//   createdAt: '2024-11-25T16:54:58.440Z',
-//   updatedAt: '2024-11-25T16:54:58.440Z'
-// }
-
 // TODO: Organize DB and Drizzle code in a separate db file
 import { drizzle } from "drizzle-orm/node-postgres";
 import { pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
@@ -41,7 +29,6 @@ const memories = pgTable("memories", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description").notNull(),
-  imageUrl: text("imageUrl"),
   timestamp: timestamp("timestamp").notNull(),
   author: text('author').references(() => users.id, {onDelete: 'cascade'}).notNull(),
 });
@@ -70,7 +57,7 @@ const csrfProtection = csrf({
 });
 
 app.use(cors({
-  origin: "https://memorylane.hmz.ngrok.io",
+  origin: process.env.APP_BASE_URL,
   credentials: true,
 }));
 app.use(express.json());
@@ -98,7 +85,7 @@ app.get("/login", (req: Request, res: Response) => {
       provider: "authkit",
 
       // The callback endpoint that WorkOS will redirect to after a user authenticates
-      redirectUri: "https://hmz.ngrok.io/auth/callback",
+      redirectUri: `${process.env.VITE_API_BASE_URL}/auth/callback`,
       clientId: WORKOS_CLIENT_ID,
     });
 
@@ -284,17 +271,36 @@ async function userIsMemoryCreator(userId: string, memoryId: number): Promise<bo
   }
 }
 
-// API Endpoints
-
-// Get all memories
-app.get('/memories', withAuth, async (req: Request, res: Response) => {
+async function getMemories(userId?: string) {
   try {
-    const rawMemories = await db.select().from(memories).orderBy(desc(memories.timestamp));
+    const rawMemories = await db.select().from(memories).where(userId ? eq(memories.author, userId) : undefined).orderBy(desc(memories.timestamp));
     const allMemories = rawMemories.map((memory) => ({
       ...memory,
       timestamp: Math.floor(new Date(memory.timestamp).getTime() / 1000),
     }));
-    res.json({ memories: allMemories });
+    const allMemoriesWithUserInfo = await Promise.all(
+      allMemories.map(async (memory) => {
+        const [user] = await db.select({ firstName: users.firstName , lastName: users.lastName, profilePictureUrl: users.profilePictureUrl }).from(users).where(eq(users.id, memory.author));
+        return {
+          ...memory,
+          user,
+        };
+      })
+    );
+    return { memories: allMemoriesWithUserInfo };
+  } catch (err) {
+    console.error("Error: ", (err as Error).message);
+    return false;
+  }
+}
+
+// API Endpoints
+
+// Get all memories
+app.get('/memories', async (req: Request, res: Response) => {
+  try {
+    const memories = await getMemories();
+    res.json(memories);
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
   }
@@ -302,7 +308,7 @@ app.get('/memories', withAuth, async (req: Request, res: Response) => {
 
 // Create a new memory
 app.post('/memories', withAuth, async (req: Request, res: Response) => {
-  const { name, description, imageUrl, timestamp } = req.body as Memory;
+  const { name, description, timestamp } = req.body as Memory;
 
   if (!name || !description || !timestamp) {
     res.status(400).json({
@@ -324,11 +330,24 @@ app.post('/memories', withAuth, async (req: Request, res: Response) => {
       const newMemory = await db.insert(memories).values({
         name,
         description,
-        imageUrl,
         timestamp: new Date(timestamp * 1000),
         author: user.id,
       }).returning({ insertedId: memories.id });
-      res.status(201).json({ message: "Memory created successfully", id: newMemory[0].insertedId });
+      const memory: Memory = {
+        id: newMemory[0].insertedId,
+        name: name,
+        description: description,
+        timestamp: timestamp,
+        author: user.id,
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          profilePictureUrl: user.profilePictureUrl
+        }
+      }
+      res.status(201).json(memory);
     }
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
@@ -339,15 +358,9 @@ app.post('/memories', withAuth, async (req: Request, res: Response) => {
 app.get('/users/:uid/memories', async (req: Request, res: Response) => {
   const { uid } = req.params;
   try {
-    const userRawMemories = await db.select().from(memories).where(eq(memories.author, uid)).orderBy(desc(memories.timestamp));
-    if (userRawMemories.length == 0) {
-      res.status(404).json({ error: "Memories not found" });
-    }
-    const userMemories = userRawMemories.map((memory) => ({
-      ...memory,
-      timestamp: Math.floor(new Date(memory.timestamp).getTime() / 1000),
-    }));
-    res.json({ memories: userMemories });
+    const memories = await getMemories(uid);
+    // console.log(memories);
+    res.json(memories);
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
   }
@@ -413,11 +426,11 @@ app.get('/memories/:id', withAuth, async (req: Request, res: Response) => {
 app.put('/memories/:id', withAuth, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, description, imageUrl, timestamp } = req.body as Memory;
+    const { name, description, timestamp } = req.body as Memory;
 
-    if (!name || !description || !imageUrl || !timestamp) {
+    if (!name || !description || !timestamp) {
       res.status(400).json({
-        error: 'Please provide all fields: name, description, imageUrl, timestamp',
+        error: 'Please provide all fields: name, description, timestamp',
       });
       return;
     }
@@ -431,7 +444,6 @@ app.put('/memories/:id', withAuth, async (req: Request, res: Response) => {
           .set({
             name,
             description,
-            imageUrl,
             timestamp: new Date(timestamp * 1000),
           })
           .where(eq(memories.id, Number(id)));
@@ -494,17 +506,22 @@ app.put('/users', withAuth, async (req: Request, res: Response) => {
 });
 
 // Check if the user is authenticated
-app.get('/whoami', withAuth, async (req: Request, res: Response) => {
+app.get('/whoami', async (req: Request, res: Response) => {
   try {
     const user = await getUserFromSession(req);
-    res.json({ userId: user?.id });
+    if (user) {
+      res.json({ userId: user?.id });
+    } else {
+      res.json({});
+    }
+    // res.json({ userId: user?.id });
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
   }
 });
 
 app. get('/', function (req, res) {
-	res.redirect('https://memorylane.hmz.ngrok.io/');
+	res.redirect(process.env.APP_BASE_URL || "");
 });
 
 app.listen(port, () => {
