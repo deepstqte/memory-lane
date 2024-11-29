@@ -70,7 +70,7 @@ const MemoryList: React.FC<MemoryListProps> = ({ userId }) => {
     setCurrentTitle("");
     setCurrentDescription("");
     setCurrentImageUrl("");
-    setCurrentTimestamp(0);
+    setCurrentTimestamp(Date.now() / 1000);
     setIsModalOpen(true);
   };
 

@@ -167,7 +167,7 @@ const MemoryModal: React.FC<MemoryModalProps> = ({
             </label>
 
           </div>
-          {errors.file && <p className="help is-danger">{errors.file}</p>}
+          {errors.file && !memoryId && <p className="help is-danger">{errors.file}</p>}
           <div className="field">
             <label className="label">Timestamp</label>
             <div className="control">
