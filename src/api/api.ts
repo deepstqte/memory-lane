@@ -33,7 +33,7 @@ const csrfProtection = csrf({
   cookie: {
     httpOnly: true,
     secure: true,
-    sameSite: "strict",
+    sameSite: "none",
   },
 });
 
@@ -113,7 +113,7 @@ app.get("/auth/callback", async (req: Request, res: Response): Promise<void> => 
       path: '/',
       httpOnly: true,
       secure: true,
-      sameSite: 'lax',
+      sameSite: 'none',
     });
 
     // Redirect the user to the homepage
@@ -158,7 +158,7 @@ async function withAuth(req: Request, res: Response, next: NextFunction): Promis
           path: "/",
           httpOnly: true,
           secure: true,
-          sameSite: "lax",
+          sameSite: "none",
         });
         // Redirect to the same route to ensure the updated cookie is used
         return res.redirect(req.originalUrl);
