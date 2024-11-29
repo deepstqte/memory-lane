@@ -1,28 +1,89 @@
-# Planned coding challenge: Memory lane
+### Demo
 
-**Please avoid initiating pull requests on this repository or forking this repository. To submit your solution, either set up a repository on your own account or forward a zip file to the appropriate contact within our talent team.**
+<div style="position: relative; padding-bottom: 62.42774566473989%; height: 0;"><iframe src="https://www.loom.com/embed/68698b69fc564296a1e4acd87357415a?sid=6009bcb2-e674-4c4f-b08c-9bdfcf89fabe" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe></div>
 
-### Problem definition
+### UI
 
-After a series of discovery calls we found out a problem that our users are facing. They are having a hard time sharing their memories with friends and family. They are using a combination of social media, messaging apps, and email to share their memories. They are looking for a solution that allows them to store and share their memories in a single place.
+The Memory Lane app's UI is built with React and Bulma as the CSS components framework.
 
-As a first iteration for this solution, we want to build a web application that allows users to create a memory lane and share it with friends and family. A memory lane is a collection of events that happened in a chronological order. Each event consists of a title, a description, a timestamp, and at least one image.
+#### Pages
 
-## Deliverables
+- User profile page (`/:userId`): This page shows a user's profile, it contain's the user's profile image that's pulled from the social auth account, their bio, and the list of all their memories. If the user logged is the owner of the profile, then they're able to update their bio in this page.
+- Memories page (`/memories`): This page is also the home page. It contains a list all the memories created by all users.
+- Memory page (`/:userId/:memoryId`): This page shows the enlarged version of the memory image, and all other memory info.
 
-- Clone this repository and create a new branch with your name. Open a pull request on your own instance of the repository.
-- An updated README providing a high level explanation of your implementation.
-- **Screenshots or a short video/gif** showing your UI implementation.
-- Update the API to accommodate for your technical design. Run the API by using `npm run serve:api`.
-- The provided mockup is only for reference and inspiration. Feel free to improve it!
+#### Modals
 
-### FAQ
+There are two modals in the app:
 
-- **Can I add a framework like Next?** If you have the time, go for it, we want to see you use your favorite tools.
-- **Is user authentication required?** No, it is not required.
-- **Can I use a component library?** Yes, you can use a component library.
-- **What will you be looking for?** Good user experience, reusable code, and a well thought out technical design.
+- A memory modal to either update an existing memory or create a new one.
+- A bio modal to allow the user to update their bio.
 
-### Inspiration mockup
+#### Sorting
 
-![Memory lane mockup](./memory_lane.png)
+In any memory list view, memories can be sorted by users with two interactive toggle buttons; "Oldest First" or "Most Recent First," and this gives users control over the order that memories are listed in.
+
+#### Validation and Feedback
+
+Field validation is implemented in memory creation and editing modal. Necessary details must be input by users before submission. This improves usability.
+
+### API
+
+The backend RESTful API is implemented Node.js with Express. The API interacts with a PostgreSQL database via Neon which simplifies working with the DB. This is using Drizzle ORM for easy query abstraction and easy schema evolution management and migrations.
+
+#### Database
+
+```plantuml
+@startuml
+
+entity "Users" as Users {
+  * id : text [PK]
+  --
+  * email : text [NOT NULL]
+  firstName : text
+  lastName : text
+  profilePictureUrl : text
+  bio : text
+}
+
+entity "Memories" as Memories {
+  * id : serial [PK]
+  --
+  * name : text [NOT NULL]
+  description : text
+  * timestamp : timestamp [NOT NULL]
+  * author : text [FK -> Users.id]
+}
+
+Users ||--o{ Memories : "has many"
+
+@enduml
+```
+
+For the `id` in the `Users` table, for simplicity, I'm using the `id` from WorkOS.
+
+#### User Management, Authentication and Security
+
+In order to simplify user management, authentication and authorization, the backend integrates with WorkOS. Session cookies, and CSRF tokens are used for authentication to protect sensitive operations, such as memory creation or deletion, from forbidden access and CSRF attacks.
+
+While this wasn't required originally, I wasn't able to imagine a good enough UX and application without it.
+
+WorkOS was implemented by only enabling social auth for the sake of this prototype. This is to pull user public info like the name and a profile photo and use them in the app without having the user to add them.
+
+#### Memory CRUD Operations
+
+The API allows users to actively create, read, update and delete memories through its dedicated endpoints, enabling easy management of memory data. It also allows them to update their bio.
+
+#### Image Storage Integration
+
+For an easy and efficient image storage and retrieval, the backend integrates with Cloudinary, enabling smooth image storage. Images that are uploaded are processed, cropped and delivered by Cloudinary's CDN.
+
+The images are stored with the public id `:userId/:memoryId` which allows their url to be discoverable. This means that it's unnecessary to store the url in the DB and that all we need to retrieve a certain memory image is its id the creator's id.
+
+### Deployment and Submission
+
+For simplicity and time's sake, no tests were written but that's be the first step into taking this project further.
+
+A dockerfile was added for each, the frontend React app, and API. They were deployed as Google CLoud Run services. Again for simplicity and time's sake, the docker image build uses the same process as local development for starting the services, and bundles all the codebase into each one of them, which is not optimal and could be improved.
+
+The application is currently deployed here: https://memorylane-1011347918070.us-central1.run.app/
