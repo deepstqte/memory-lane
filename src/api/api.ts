@@ -4,12 +4,11 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import csrf from "csurf";
 import { Memory, User } from "./types";
+import { memories, users, db } from "./db/index.js";
 
 import { WorkOS, AuthenticateWithSessionCookieSuccessResponse, AuthenticateWithSessionCookieFailedResponse } from "@workos-inc/node";
 
 // TODO: Organize DB and Drizzle code in a separate db file
-import { drizzle } from "drizzle-orm/node-postgres";
-import { pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
 import { eq, and, desc } from 'drizzle-orm';
 
 import { v2 as cloudinary } from 'cloudinary';
@@ -25,25 +24,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const memories = pgTable("memories", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  description: text("description").notNull(),
-  timestamp: timestamp("timestamp").notNull(),
-  author: text('author').references(() => users.id, {onDelete: 'cascade'}).notNull(),
-});
-
-const users = pgTable("users", {
-  id: text("id").primaryKey(),
-  email: text("email").notNull(),
-  firstName: text("firstName"),
-  lastName: text("lastName"),
-  profilePictureUrl: text("profilePictureUrl"),
-  bio: text("bio"),
-});
-
 // Initialize Drizzle with PostgreSQL adapter
-const db = drizzle("postgresql://memory-lane_owner:" + process.env.NEON_SECRET + "@ep-dry-thunder-a5c84sxk.us-east-2.aws.neon.tech/memory-lane?sslmode=require");
 
 const app: Express = express();
 const port = 4001;
@@ -127,9 +108,6 @@ app.get("/auth/callback", async (req: Request, res: Response): Promise<void> => 
       secure: true,
       sameSite: 'lax',
     });
-
-    // Use the information in `user` for further business logic.
-    // console.log(user);
 
     // Redirect the user to the homepage
     return res.redirect('/');
@@ -359,7 +337,6 @@ app.get('/users/:uid/memories', async (req: Request, res: Response) => {
   const { uid } = req.params;
   try {
     const memories = await getMemories(uid);
-    // console.log(memories);
     res.json(memories);
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
@@ -370,7 +347,6 @@ app.post('/upload', withAuth, upload.single('file'), async (req: Request, res: R
   try {
     const file = req.file;
     const name = req.body.memoryId;
-    // console.log(file);
     if (!file || !name) {
       res.status(400).json({ error: 'No file uploaded or no memoryId provided' });
       return;
