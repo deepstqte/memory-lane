@@ -13,6 +13,7 @@ const MemoryList: React.FC<MemoryListProps> = ({ userId }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedSort, setSelectedSort] = useState("desc");
+  const [showNewMemoryButton, setShowNewMemoryButton] = useState<boolean>();
 
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [currentMemoryId, setCurrentMemoryId] = useState<number | null>(null);
@@ -171,6 +172,34 @@ const MemoryList: React.FC<MemoryListProps> = ({ userId }) => {
     fetchMemories();
   }, [userId, selectedSort]);
 
+  useEffect(() => {
+    const fetchLoggedInUserId = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/whoami`, {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-Token": csrfToken,
+          },
+        });
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.json();
+        if ("userId" in data) {
+          setShowNewMemoryButton(true);
+        } else {
+          setShowNewMemoryButton(false);
+        }
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "An unknown error occurred");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchLoggedInUserId();
+  }, [csrfToken]);
+
   if (isLoading) return <p className="has-text-centered">Loading memory...</p>;
   if (error) return <p className="has-text-centered has-text-danger">Error: {error}</p>;
 
@@ -193,11 +222,13 @@ const MemoryList: React.FC<MemoryListProps> = ({ userId }) => {
           </button>
         </div>
 
-        <div>
-          <button className="button is-normal" onClick={handleNewMemoryClick}>
-            New Memory
-          </button>
-        </div>
+        {showNewMemoryButton && (
+          <div>
+            <button className="button is-normal" onClick={handleNewMemoryClick}>
+              New Memory
+            </button>
+          </div>
+        )}
       </div>
       <div className="columns is-multiline is-centered">
         {memories.map((memory) => (
