@@ -18,7 +18,7 @@ const AuthButton: React.FC = () => {
         });
 
         const data = await response.json();
-
+        console.log(data);
         if ("userId" in data) {
           setIsAuthenticated(true);
         } else {
