@@ -38,19 +38,7 @@ const AuthButton: React.FC = () => {
   };
 
   const handleLogout = async () => {
-    try {
-    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/logout`, {
-        method: "GET",
-        credentials: "include",
-      });
-      if (response.ok) {
-        setIsAuthenticated(false);
-      } else {
-        console.error("Failed to log out:", response.statusText);
-      }
-    } catch (error) {
-      console.error("Error during logout:", error);
-    }
+    window.location.href = `${import.meta.env.VITE_API_BASE_URL}/logout`;
   };
 
   if (isAuthenticated === null) {
