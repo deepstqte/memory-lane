@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import TimeAgo from 'javascript-time-ago';
 import en from 'javascript-time-ago/locale/en';
 import useCsrfToken from "./hooks/useCsrfToken";
+import MemoryText from "./MemoryText";
 
 TimeAgo.addDefaultLocale(en);
 
@@ -81,87 +82,83 @@ const MemoryCard: React.FC<MemoryCardProps> = ({ title, description, image, time
             <p className="card-header-title">{firstName} {lastName}</p>
         </header>
       </a>
-      <div className="card-content">
-        <div className="columns is-vcentered">
-          {/* Left Column: Image */}
+      <a href={"/"+userId+"/"+memoryId}>
+        <div className="card-content">
+          <div className="columns is-vcentered">
+
           <div className="column is-one-third">
             <figure className="image is-square">
               <img src={"https://res.cloudinary.com/memory-lane/image/upload/c_crop,g_center,ar_1:1/"+userId+"/"+memoryId} alt={title} />
             </figure>
           </div>
-          {/* Right Column: Content */}
-          <div className="column">
-            <div className="content">
-              <p className="title is-4">{title}</p>
-              <p className="subtitle is-6 has-text-grey" title={timeString}>
-                {timeAgoString}
-              </p>
-              <p>{description}</p>
-            </div>
-            {/* Contextual Menu */}
-            {showUpdatMenu && (
-              <div style={{ position: "absolute", bottom: "1rem", right: "1rem" }}>
-                <div
-                  className="dropdown is-right"
-                  style={{ position: "relative" }}
-                  onMouseLeave={() => setIsMenuOpen(false)}
-                >
-                  <div
-                    className="dropdown-trigger"
-                    onClick={toggleMenu}
-                    style={{
-                      cursor: "pointer",
-                    }}
-                  >
-                    <span className="icon">
-                      <i className="fas fa-ellipsis-h" aria-hidden="true"></i>
-                    </span>
-                  </div>
 
-                  {isMenuOpen && (
+            <div className="column">
+              <MemoryText title={title} timeString={timeString} timeAgoString={timeAgoString} description={description} />
+
+              {showUpdatMenu && (
+                <div style={{ position: "absolute", bottom: "1rem", right: "1rem" }}>
+                  <div
+                    className="dropdown is-right"
+                    style={{ position: "relative" }}
+                    onMouseLeave={() => setIsMenuOpen(false)}
+                  >
                     <div
-                      className="dropdown-menu"
+                      className="dropdown-trigger"
+                      onClick={toggleMenu}
                       style={{
-                        position: "absolute",
-                        top: "100%",
-                        right: "0",
-                        zIndex: 9999,
-                        backgroundColor: "white",
-                        boxShadow: "0px 0px 0px rgba(0, 0, 0, 0.15)",
-                        display: "block",
+                        cursor: "pointer",
                       }}
                     >
-                      <ul className="dropdown-content" style={{ padding: 0, margin: 0 }}>
-                        <li
-                          className="dropdown-item"
-                          onClick={() => onUpdate(memoryId, title, description, image, timestamp)}
-                          style={{
-                            padding: "0.5rem 1rem",
-                            cursor: "pointer",
-                          }}
-                        >
-                          Update
-                        </li>
-                        <li
-                          className="dropdown-item"
-                          onClick={() => onDelete(memoryId)}
-                          style={{
-                            padding: "0.5rem 1rem",
-                            cursor: "pointer",
-                            color: "red",
-                          }}
-                        >
-                          Delete
-                        </li>
-                      </ul>
+                      <span className="icon">
+                        <i className="fas fa-ellipsis-h" aria-hidden="true"></i>
+                      </span>
                     </div>
-                  )}
+
+                    {isMenuOpen && (
+                      <div
+                        className="dropdown-menu"
+                        style={{
+                          position: "absolute",
+                          top: "100%",
+                          right: "0",
+                          zIndex: 9999,
+                          backgroundColor: "white",
+                          boxShadow: "0px 0px 0px rgba(0, 0, 0, 0.15)",
+                          display: "block",
+                        }}
+                      >
+                        <ul className="dropdown-content" style={{ padding: 0, margin: 0 }}>
+                          <li
+                            className="dropdown-item"
+                            onClick={() => onUpdate(memoryId, title, description, image, timestamp)}
+                            style={{
+                              padding: "0.5rem 1rem",
+                              cursor: "pointer",
+                            }}
+                          >
+                            Update
+                          </li>
+                          <li
+                            className="dropdown-item"
+                            onClick={() => onDelete(memoryId)}
+                            style={{
+                              padding: "0.5rem 1rem",
+                              cursor: "pointer",
+                              color: "red",
+                            }}
+                          >
+                            Delete
+                          </li>
+                        </ul>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      </a>
     </div>
   );
 };

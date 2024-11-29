@@ -16,9 +16,7 @@ const Profile: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   const handleProfileUpdateClick = (
-    // bio: string
   ) => {
-    // setCurrentBio(bio);
     setIsModalOpen(true);
   };
 

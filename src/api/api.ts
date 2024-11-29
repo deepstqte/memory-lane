@@ -394,7 +394,7 @@ app.get('/users/:uid', async (req: Request, res: Response) => {
 });
 
 // Get a memory by ID
-app.get('/memories/:id', withAuth, async (req: Request, res: Response) => {
+app.get('/memories/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
     const memory = await db.select().from(memories).where(eq(memories.id, Number(id)));
