@@ -12,8 +12,8 @@ const MemoryList: React.FC<MemoryListProps> = ({ userId }) => {
   const [memories, setMemories] = useState<Memory[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedSort, setSelectedSort] = useState("desc");
 
-  // Modal State
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [currentMemoryId, setCurrentMemoryId] = useState<number | null>(null);
   const [currentTitle, setCurrentTitle] = useState<string>("");
@@ -22,6 +22,10 @@ const MemoryList: React.FC<MemoryListProps> = ({ userId }) => {
   const [currentTimestamp, setCurrentTimestamp] = useState<number>(0);
 
   const csrfToken = useCsrfToken();
+
+  const handleSortClick = (sortOption: string) => {
+    setSelectedSort(sortOption);
+  };
 
   const handleDelete = async (memoryId: number) => {
     try {
@@ -148,8 +152,8 @@ const MemoryList: React.FC<MemoryListProps> = ({ userId }) => {
     const fetchMemories = async () => {
       try {
         const url = userId
-          ? `${import.meta.env.VITE_API_BASE_URL}/users/${userId}/memories`
-          : `${import.meta.env.VITE_API_BASE_URL}/memories`;
+          ? `${import.meta.env.VITE_API_BASE_URL}/users/${userId}/memories?order=${selectedSort}`
+          : `${import.meta.env.VITE_API_BASE_URL}/memories?order=${selectedSort}`;
         const response = await fetch(url, {
           method: "GET",
           credentials: "include",
@@ -165,16 +169,35 @@ const MemoryList: React.FC<MemoryListProps> = ({ userId }) => {
     };
 
     fetchMemories();
-  }, [userId]);
+  }, [userId, selectedSort]);
 
   if (isLoading) return <p className="has-text-centered">Loading memory...</p>;
   if (error) return <p className="has-text-centered has-text-danger">Error: {error}</p>;
+
   return (
-    <div className="container" style={{ marginTop: "2rem", marginBottom: "2rem" }}>
-      <div className="is-flex is-justify-content-flex-end">
-        <button className="button is-normal" onClick={handleNewMemoryClick}>
-          New Memory
-        </button>
+    <div className="container" style={{ marginTop: "4rem", marginBottom: "4rem" }}>
+      <div className="is-flex is-justify-content-space-between is-align-items-center" style={{ marginBottom: "4rem" }}>
+        {/* <label className="label">Sort:</label> */}
+        <div className="has-addons">
+          <button
+            className={`button ${selectedSort === "asc" ? "is-primary" : ""}`}
+            onClick={() => handleSortClick("asc")}
+          >
+            Oldest first
+          </button>
+          <button
+            className={`button ${selectedSort === "desc" ? "is-primary" : ""}`}
+            onClick={() => handleSortClick("desc")}
+          >
+            Most recent first
+          </button>
+        </div>
+
+        <div>
+          <button className="button is-normal" onClick={handleNewMemoryClick}>
+            New Memory
+          </button>
+        </div>
       </div>
       <div className="columns is-multiline is-centered">
         {memories.map((memory) => (

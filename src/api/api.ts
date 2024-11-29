@@ -9,7 +9,7 @@ import { memories, users, db } from "./db/index.js";
 import { WorkOS, AuthenticateWithSessionCookieSuccessResponse, AuthenticateWithSessionCookieFailedResponse } from "@workos-inc/node";
 
 // TODO: Organize DB and Drizzle code in a separate db file
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, asc } from 'drizzle-orm';
 
 import { v2 as cloudinary } from 'cloudinary';
 import multer from 'multer';
@@ -256,9 +256,9 @@ async function userIsMemoryCreator(userId: string, memoryId: number): Promise<bo
   }
 }
 
-async function getMemories(userId?: string) {
+async function getMemories(userId?: string, order?: string) {
   try {
-    const rawMemories = await db.select().from(memories).where(userId ? eq(memories.author, userId) : undefined).orderBy(desc(memories.timestamp));
+    const rawMemories = await db.select().from(memories).where(userId ? eq(memories.author, userId) : undefined).orderBy(order === 'asc' ? asc(memories.timestamp) : desc(memories.timestamp));
     const allMemories = rawMemories.map((memory) => ({
       ...memory,
       timestamp: Math.floor(new Date(memory.timestamp).getTime() / 1000),
@@ -284,7 +284,8 @@ async function getMemories(userId?: string) {
 // Get all memories
 app.get('/memories', async (req: Request, res: Response) => {
   try {
-    const memories = await getMemories();
+    const order = req.query.order as string;
+    const memories = await getMemories(undefined, order);
     res.json(memories);
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
@@ -343,7 +344,8 @@ app.post('/memories', withAuth, async (req: Request, res: Response) => {
 app.get('/users/:uid/memories', async (req: Request, res: Response) => {
   const { uid } = req.params;
   try {
-    const memories = await getMemories(uid);
+    const order = req.query.order as string;
+    const memories = await getMemories(uid, order);
     res.json(memories);
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
@@ -497,7 +499,6 @@ app.get('/whoami', async (req: Request, res: Response) => {
     } else {
       res.json({});
     }
-    // res.json({ userId: user?.id });
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
   }
