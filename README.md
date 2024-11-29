@@ -1,6 +1,6 @@
 ### Demo
 
-<div style="position: relative; padding-bottom: 62.42774566473989%; height: 0;"><iframe src="https://www.loom.com/embed/68698b69fc564296a1e4acd87357415a?sid=6009bcb2-e674-4c4f-b08c-9bdfcf89fabe" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe></div>
+[![Memory Lane App Demo - Watch Video](https://cdn.loom.com/sessions/thumbnails/68698b69fc564296a1e4acd87357415a-cd14eabf7bd60e89-full-play.gif)](https://www.loom.com/embed/68698b69fc564296a1e4acd87357415a?sid=6009bcb2-e674-4c4f-b08c-9bdfcf89fabe)
 
 ### UI
 
@@ -33,32 +33,7 @@ The backend RESTful API is implemented Node.js with Express. The API interacts w
 
 #### Database
 
-```plantuml
-@startuml
-
-entity "Users" as Users {
-  * id : text [PK]
-  --
-  * email : text [NOT NULL]
-  firstName : text
-  lastName : text
-  profilePictureUrl : text
-  bio : text
-}
-
-entity "Memories" as Memories {
-  * id : serial [PK]
-  --
-  * name : text [NOT NULL]
-  description : text
-  * timestamp : timestamp [NOT NULL]
-  * author : text [FK -> Users.id]
-}
-
-Users ||--o{ Memories : "has many"
-
-@enduml
-```
+![Database](https://hackmd.io/_uploads/H1iaNjPQ1x.png)
 
 For the `id` in the `Users` table, for simplicity, I'm using the `id` from WorkOS.
 
