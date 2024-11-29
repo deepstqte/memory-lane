@@ -82,15 +82,18 @@ const MemoryCard: React.FC<MemoryCardProps> = ({ title, description, image, time
             <p className="card-header-title">{firstName} {lastName}</p>
         </header>
       </a>
-      <a href={"/"+userId+"/"+memoryId}>
+
         <div className="card-content">
           <div className="columns is-vcentered">
 
-          <div className="column is-one-third">
-            <figure className="image is-square">
-              <img src={"https://res.cloudinary.com/memory-lane/image/upload/f_jpg,c_crop,g_center,ar_1:1/"+userId+"/"+memoryId} alt={title} />
-            </figure>
-          </div>
+            <div className="column is-one-third">
+              <figure className="image is-square">
+                <a href={"/"+userId+"/"+memoryId}>
+                <img src={"https://res.cloudinary.com/memory-lane/image/upload/f_jpg,c_crop,g_center,ar_1:1/"+userId+"/"+memoryId} alt={title} />
+                </a>
+              </figure>
+            </div>
+
 
             <div className="column">
               <MemoryText title={title} timeString={timeString} timeAgoString={timeAgoString} description={description} />
@@ -158,7 +161,6 @@ const MemoryCard: React.FC<MemoryCardProps> = ({ title, description, image, time
             </div>
           </div>
         </div>
-      </a>
     </div>
   );
 };
