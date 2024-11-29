@@ -1,3 +1,5 @@
+Try the app [here](https://memorylane-1011347918070.us-central1.run.app/).
+
 ### Demo
 
 [![Memory Lane App Demo - Watch Video](https://cdn.loom.com/sessions/thumbnails/68698b69fc564296a1e4acd87357415a-cd14eabf7bd60e89-full-play.gif)](https://www.loom.com/embed/68698b69fc564296a1e4acd87357415a?sid=6009bcb2-e674-4c4f-b08c-9bdfcf89fabe)
@@ -60,5 +62,3 @@ The images are stored with the public id `:userId/:memoryId` which allows their 
 For simplicity and time's sake, no tests were written but that's be the first step into taking this project further.
 
 A dockerfile was added for each, the frontend React app, and API. They were deployed as Google CLoud Run services. Again for simplicity and time's sake, the docker image build uses the same process as local development for starting the services, and bundles all the codebase into each one of them, which is not optimal and could be improved.
-
-The application is currently deployed here: https://memorylane-1011347918070.us-central1.run.app/
