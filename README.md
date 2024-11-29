@@ -33,7 +33,7 @@ The backend RESTful API is implemented Node.js with Express. The API interacts w
 
 #### Database
 
-![Database](https://hackmd.io/_uploads/H1iaNjPQ1x.png)
+![Database](/dbschema.svg)
 
 For the `id` in the `Users` table, for simplicity, I'm using the `id` from WorkOS.
 
