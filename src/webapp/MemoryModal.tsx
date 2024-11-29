@@ -40,7 +40,7 @@ const MemoryModal: React.FC<MemoryModalProps> = ({
     if (!title.trim()) newErrors.title = "Title is required.";
     if (!description.trim()) newErrors.description = "Description is required.";
     if (!datetime.trim()) newErrors.datetime = "A date and time are required.";
-    if (!selectedFile) newErrors.file = "You must select a file.";
+    if (!selectedFile && !memoryId) newErrors.file = "You must select a file.";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
