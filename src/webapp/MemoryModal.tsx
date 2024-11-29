@@ -33,6 +33,17 @@ const MemoryModal: React.FC<MemoryModalProps> = ({
   const [description, setDescription] = useState<string>(initialDescription);
   const [datetime, setDatetime] = useState<string>("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    if (!title.trim()) newErrors.title = "Title is required.";
+    if (!description.trim()) newErrors.description = "Description is required.";
+    if (!datetime.trim()) newErrors.datetime = "A date and time are required.";
+    if (!selectedFile) newErrors.file = "You must select a file.";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   // Populate the modal with initial values
   useEffect(() => {
@@ -47,8 +58,10 @@ const MemoryModal: React.FC<MemoryModalProps> = ({
 
   // Handle form submission
   const handleConfirm = () => {
-    uploadAndSubmit();
-    onClose();
+    if (validateForm()) {
+      uploadAndSubmit();
+      onClose();
+    }
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -119,6 +132,7 @@ const MemoryModal: React.FC<MemoryModalProps> = ({
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
               />
+              {errors.title && <p className="help is-danger">{errors.title}</p>}
             </div>
           </div>
           <div className="field">
@@ -129,6 +143,7 @@ const MemoryModal: React.FC<MemoryModalProps> = ({
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
               ></textarea>
+              {errors.description && <p className="help is-danger">{errors.description}</p>}
             </div>
           </div>
 
@@ -150,7 +165,9 @@ const MemoryModal: React.FC<MemoryModalProps> = ({
                 {selectedFile ? selectedFile.name : "No file selected"}
               </span>
             </label>
+
           </div>
+          {errors.file && <p className="help is-danger">{errors.file}</p>}
           <div className="field">
             <label className="label">Timestamp</label>
             <div className="control">
@@ -160,6 +177,7 @@ const MemoryModal: React.FC<MemoryModalProps> = ({
                 value={datetime}
                 onChange={(e) => setDatetime(e.target.value)}
               />
+              {errors.datetime && <p className="help is-danger">{errors.datetime}</p>}
             </div>
           </div>
         </section>

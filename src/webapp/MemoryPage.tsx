@@ -42,7 +42,7 @@ const MemoryPage: React.FC = () => {
   return (
     <div style={{ textAlign: "center", marginTop: "2rem" }}>
       <figure className="image" style={{ margin: "2 auto", display: "flex", justifyContent: "center" }}>
-        <img src={"https://res.cloudinary.com/memory-lane/image/upload/"+userId+"/"+memoryId} alt={"altText"} style={{
+        <img src={"https://res.cloudinary.com/memory-lane/image/upload/f_jpg/"+userId+"/"+memoryId} alt={"altText"} style={{
           borderRadius: "8px",
           width: "auto",
           height: "auto",

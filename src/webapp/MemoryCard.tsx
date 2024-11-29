@@ -88,7 +88,7 @@ const MemoryCard: React.FC<MemoryCardProps> = ({ title, description, image, time
 
           <div className="column is-one-third">
             <figure className="image is-square">
-              <img src={"https://res.cloudinary.com/memory-lane/image/upload/c_crop,g_center,ar_1:1/"+userId+"/"+memoryId} alt={title} />
+              <img src={"https://res.cloudinary.com/memory-lane/image/upload/f_jpg,c_crop,g_center,ar_1:1/"+userId+"/"+memoryId} alt={title} />
             </figure>
           </div>
 
