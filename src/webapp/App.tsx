@@ -12,8 +12,16 @@ function App() {
   return (
     <Router>
       <div>
-        <div className='mx-auto max-w-7xl sm:px-6 lg:px-8 mt-32'>
-          <AuthButton />
+        <div className='mx-auto max-w-7xl sm:px-6 lg:px-8 mt-16'>
+          <div className="is-flex is-justify-content-space-between is-align-items-center">
+            <a href="/" className="logo">
+              <div className="logo-text">
+                <span className="logo-word memory">MEMORY</span>
+                <span className="logo-word lane">LANE</span>
+              </div>
+            </a>
+            <AuthButton />
+          </div>
           <Routes>
             <Route path="/" element={<MemoryList />} />
             <Route path="/:userId" element={<Profile />} />

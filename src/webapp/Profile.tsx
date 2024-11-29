@@ -103,7 +103,6 @@ const Profile: React.FC = () => {
 
   return (
     <div>
-      <div className='overflow-hidden rounded-lg bg-white shadow h-56'>
         <div className='px-4 py-5 sm:p-6'>
           <div className='flex items-center'>
             <figure className="image is-48x48">
@@ -124,7 +123,6 @@ const Profile: React.FC = () => {
             </div>
           )}
         </div>
-      </div>
       <MemoryList userId={userId} />
 
       <ProfileModal
