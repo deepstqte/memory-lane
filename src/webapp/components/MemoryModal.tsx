@@ -45,13 +45,26 @@ const MemoryModal: React.FC<MemoryModalProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
+  const convertTimestampToLocaleISOString = (timestamp: number): string => {
+    const date = new Date(timestamp * 1000);
+
+    const datePart = date.toLocaleDateString('en-CA'); // "en-CA" gives ISO 8601-like format (YYYY-MM-DD)
+    const timePart = date.toLocaleTimeString('en-US', {
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit',
+    }); // "HH:mm"
+
+    return `${datePart}T${timePart}`;
+  }
+
   // Populate the modal with initial values
   useEffect(() => {
     if (isOpen) {
       setTitle(initialTitle || "");
       setDescription(initialDescription || "");
       // Convert Unix timestamp to local ISO string for datetime-local input
-      const initialDatetime = new Date(initialTimestamp * 1000).toISOString().slice(0, 16);
+      const initialDatetime = convertTimestampToLocaleISOString(initialTimestamp);
       setDatetime(initialDatetime || "");
     }
   }, [isOpen, initialTitle, initialDescription, initialImageUrl, initialTimestamp]);
