@@ -5,7 +5,7 @@ import ProfileModal from "../components/ProfileModal";
 import { User } from "../types";
 import useCsrfToken from "../hooks/useCsrfToken";
 
-const Profile: React.FC = () => {
+const ProfilePage: React.FC = () => {
   const csrfToken = useCsrfToken();
   const { userId } = useParams<{ userId: string }>();
   const [user, setUser] = useState<User>();
@@ -136,4 +136,4 @@ const Profile: React.FC = () => {
   );
 };
 
-export default Profile;
+export default ProfilePage;

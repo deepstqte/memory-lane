@@ -1,8 +1,8 @@
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import MemoryList from "./components/MemoryList";
-import Profile from "./pages/Profile";
-import MemoryPage from "./pages/MemoryPage";
+import ProfilePage from "./pages/Profile";
+import MemoryPage from "./pages/Memory";
 import LoginRedirect from "./ExternalRedirects/Login";
 import LogoutRedirect from "./ExternalRedirects/Logout";
 import AuthButton from "./components/AuthButton";
@@ -24,7 +24,7 @@ function App() {
           </div>
           <Routes>
             <Route path="/" element={<MemoryList />} />
-            <Route path="/:userId" element={<Profile />} />
+            <Route path="/:userId" element={<ProfilePage />} />
             <Route path="/:userId/:memoryId" element={<MemoryPage />} />
             <Route path="/login" element={<LoginRedirect />} />
             <Route path="/logout" element={<LogoutRedirect />} />
