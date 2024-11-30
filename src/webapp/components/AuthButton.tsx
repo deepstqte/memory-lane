@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import useCsrfToken from "./hooks/useCsrfToken";
+import useCsrfToken from "../hooks/useCsrfToken";
 
 const AuthButton: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);

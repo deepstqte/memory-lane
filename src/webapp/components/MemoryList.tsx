@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import MemoryCard from "./MemoryCard";
 import MemoryModal from "./MemoryModal";
-import { Memory } from "./types";
-import useCsrfToken from "./hooks/useCsrfToken";
+import { Memory } from "../types";
+import useCsrfToken from "../hooks/useCsrfToken";
 
 interface MemoryListProps {
   userId?: string;

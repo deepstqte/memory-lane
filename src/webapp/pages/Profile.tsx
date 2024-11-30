@@ -1,9 +1,9 @@
 import { useParams } from "react-router-dom";
 import React, { useEffect, useState } from "react";
-import MemoryList from "./MemoryList";
-import ProfileModal from "./ProfileModal";
-import { User } from "./types";
-import useCsrfToken from "./hooks/useCsrfToken";
+import MemoryList from "../components/MemoryList";
+import ProfileModal from "../components/ProfileModal";
+import { User } from "../types";
+import useCsrfToken from "../hooks/useCsrfToken";
 
 const Profile: React.FC = () => {
   const csrfToken = useCsrfToken();

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Memory } from "./types";
-import MemoryText from "./MemoryText";
+import { Memory } from "../types";
+import MemoryText from "../components/MemoryText";
 import TimeAgo from 'javascript-time-ago';
 
 const timeAgo = new TimeAgo('en-US');

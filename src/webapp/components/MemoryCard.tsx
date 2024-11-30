@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import TimeAgo from 'javascript-time-ago';
 import en from 'javascript-time-ago/locale/en';
-import useCsrfToken from "./hooks/useCsrfToken";
+import useCsrfToken from "../hooks/useCsrfToken";
 import MemoryText from "./MemoryText";
 
 TimeAgo.addDefaultLocale(en);

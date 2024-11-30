@@ -1,11 +1,11 @@
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import MemoryList from "./MemoryList";
-import Profile from "./Profile";
-import MemoryPage from "./MemoryPage";
+import MemoryList from "./components/MemoryList";
+import Profile from "./pages/Profile";
+import MemoryPage from "./pages/MemoryPage";
 import LoginRedirect from "./ExternalRedirects/Login";
 import LogoutRedirect from "./ExternalRedirects/Logout";
-import AuthButton from "./AuthButton";
+import AuthButton from "./components/AuthButton";
 import './App.css'
 
 function App() {

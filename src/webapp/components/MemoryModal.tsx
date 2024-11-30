@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import useCsrfToken from "./hooks/useCsrfToken";
+import useCsrfToken from "../hooks/useCsrfToken";
 
 interface MemoryModalProps {
   isOpen: boolean;
