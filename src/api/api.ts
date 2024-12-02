@@ -284,6 +284,10 @@ async function getMemories(userId?: string, order?: string) {
 // Get all memories
 app.get('/memories', async (req: Request, res: Response) => {
   try {
+    const user = await getUserFromSession(req);
+    if (user) {
+      await addUser(user);
+    }
     const order = req.query.order as string;
     const memories = await getMemories(undefined, order);
     res.json(memories);
