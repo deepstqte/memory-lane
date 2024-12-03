@@ -8,7 +8,6 @@ import { memories, users, db } from "./db/index.js";
 
 import { WorkOS, AuthenticateWithSessionCookieSuccessResponse, AuthenticateWithSessionCookieFailedResponse } from "@workos-inc/node";
 
-// TODO: Organize DB and Drizzle code in a separate db file
 import { eq, and, desc, asc } from 'drizzle-orm';
 
 import { v2 as cloudinary } from 'cloudinary';
