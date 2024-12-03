@@ -95,7 +95,7 @@ const MemoryCard: React.FC<MemoryCardProps> = ({ title, description, image, time
             </div>
 
 
-            <div className="column">
+            <div className="column" style={{ maxWidth: "80%", margin: "0 auto", overflow: "hidden" }}>
               <MemoryText title={title} timeString={timeString} timeAgoString={timeAgoString} description={description} />
 
               {showUpdatMenu && (

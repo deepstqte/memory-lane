@@ -9,7 +9,7 @@ interface MemoryTextProps {
 
 const MemoryText: React.FC<MemoryTextProps> = ({ title, timeString, timeAgoString, description }) => {
   return (
-      <div className="content">
+      <div className="content" style={{ wordWrap: "break-word", overflowWrap: "break-word" }}>
         <p className="title is-4">{title}</p>
         <p className="subtitle is-6 has-text-grey" title={timeString}>
           {timeAgoString}
