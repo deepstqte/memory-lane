@@ -1,0 +1,26 @@
+.logo {
+  text-decoration: none;
+  color: inherit;
+  display: inline-block;
+}
+
+.logo-text {
+  text-align: center;
+  font-family: 'Roboto', sans-serif;
+  font-weight: bold;
+  letter-spacing: 2px;
+  line-height: 1.2;
+}
+
+.logo-word {
+  display: block;
+}
+
+.logo-word.memory {
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.logo-word.lane {
+    font-size: 29px;
+}
