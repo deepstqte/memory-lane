@@ -1,5 +1,3 @@
-Try the app [here](https://memorylane-1011347918070.us-central1.run.app/).
-
 ### Demo
 
 [![Memory Lane App Demo - Watch Video](https://cdn.loom.com/sessions/thumbnails/68698b69fc564296a1e4acd87357415a-cd14eabf7bd60e89-full-play.gif)](https://www.loom.com/embed/68698b69fc564296a1e4acd87357415a?sid=6009bcb2-e674-4c4f-b08c-9bdfcf89fabe)
